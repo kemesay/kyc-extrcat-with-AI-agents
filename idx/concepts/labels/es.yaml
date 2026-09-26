@@ -1,0 +1,13 @@
+# Spanish label aliases -- see en.yaml's header for sourcing discipline.
+surname:
+  - apellido
+given_names:
+  - nombre
+date_of_birth:
+  - fecha de nacimiento
+sex:
+  - sexo
+nationality:
+  - nacionalidad
+place_of_birth:
+  - lugar de nacimiento

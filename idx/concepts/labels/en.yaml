@@ -1,0 +1,123 @@
+# English label aliases -- see docs/FIELD_ONTOLOGY.md. Every alias below
+# was taken directly from generic_ocr.py's/aamva.py's previously hardcoded
+# regex alternations (not re-guessed) when this file was created or later
+# extended, or supplied directly by the user against a real document
+# (aamva.py's Convention 3 fallback was migrated to this shared ontology,
+# reversing an earlier decision to keep it separate -- confirmed with the
+# user, who accepted responsibility for the added aliases not individually
+# re-verified against a published standard in this session). Extend only
+# from a real document or a published standard (ICAO 9303's VIZ labels),
+# never a guess -- a wrong alias silently corrupts every future document
+# in this language.
+surname:
+  - surname
+  - last name
+  - family name
+given_names:
+  - given names
+  - given name
+  - first name
+  - forename
+full_name:
+  - full name
+  - name
+date_of_birth:
+  - date of birth
+  - d.o.b.
+  - d.o.b
+  - dob
+  - birth date
+  - birthdate
+  - birth
+  - date_of_birth
+  - date-of-birth
+date_of_issue:
+  - date of issue
+  - issue date
+  - date issued
+  - iss
+  - issue
+  - issued
+  - issuing date
+date_of_expiry:
+  - date of expiry
+  - expiry date
+  - valid until
+  - expiration date
+  - exp
+  - expiry
+  - expiration
+  - expires
+  - exp date
+document_number:
+  - document no
+  - document no.
+  - document number
+  - id no
+  - id no.
+  - id number
+  - passport no
+  - passport no.
+  - passport number
+  - license no
+  - license no.
+  - license number
+  - licence no
+  - licence no.
+  - licence number
+  - card number
+  # AAMVA-specific labels, confirmed against real cards this project has
+  # processed -- migrated in from aamva.py's own hardcoded fallback
+  # (Maryland's "Customer identifier"). "DLN" is deliberately NOT added
+  # as a bare alias even though a real North Carolina card uses it: a
+  # real regression, caught by this project's existing test suite, where
+  # a properly numbered-convention card ("4d DLN <number> 9 Class <code>")
+  # let this full-word fallback's own tolerant, multi-chunk value shape
+  # (built to survive OCR inserting a stray space INSIDE one identifier)
+  # greedily absorb the following, unrelated "9"/class-code tokens too --
+  # this pattern is tried BEFORE the numbered convention's own dedicated
+  # "4d" line parser (`_extract_4d_number`), which already handles a
+  # numbered card's DLN correctly and unambiguously. The full phrases
+  # below don't share this risk, since they never appear as isolated
+  # short tokens the way a bare abbreviation does.
+  - driver license no
+  - driver licence no
+  - permit no
+  - national id
+  - customer identifier
+sex:
+  - sex
+  - gender
+nationality:
+  - nationality
+  - citizenship
+place_of_birth:
+  - place of birth
+  - birthplace
+# The three fields below were migrated in alongside aamva.py's Convention
+# 3 fallback (previously hardcoded there as "Classifications"/
+# "Restrictions"/"Endorsements") -- real words confirmed against actual
+# AAMVA cards processed this session, plus "grade" and "restr", each
+# confirmed against a real card of its own (an Ethiopian driving license
+# labels this concept "Grade"; a North Carolina license abbreviates
+# restrictions to "Restr"). Two words are deliberately NOT added as bare
+# aliases even though they're the most obvious short forms: "class" for
+# license_class collides with AAMVA's OWN numbered-convention field label
+# ("9 CLASS") -- a real regression, caught by this project's existing
+# test suite, where a card that already correctly matched via Convention
+# 2's numbered field ALSO re-matched via this Convention-3 fallback
+# alias, landing on an unrelated nearby token instead of staying blank.
+# "end" for license_endorsements would match constantly as an ordinary
+# English word. "classification(s)"/"endorsements" alone are the only
+# reliably distinctive full forms confirmed so far.
+license_class:
+  - classification
+  - classifications
+  - grade
+license_restrictions:
+  - restrictions
+  - restriction
+  - restr
+license_endorsements:
+  - endorsements
+  - endorsement

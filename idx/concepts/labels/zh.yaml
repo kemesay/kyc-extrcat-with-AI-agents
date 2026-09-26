@@ -1,0 +1,9 @@
+# Chinese label aliases -- see en.yaml's header for sourcing discipline.
+# Supplied directly by the user this session, not independently re-verified
+# against a published standard.
+date_of_birth:
+  - 出生日期
+surname:
+  - 姓
+given_names:
+  - 名

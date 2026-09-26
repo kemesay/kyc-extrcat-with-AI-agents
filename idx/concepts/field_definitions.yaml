@@ -1,0 +1,336 @@
+# Field profiles — the extraction engine does not change when a new
+# country or card generation appears. This file grows: aliases, types,
+# validators. See docs/FIELD_ONTOLOGY.md.
+#
+# Bilingual labels are stored AS PRINTED on the card (pipe or slash
+# between languages). You do not need a per-language YAML file to add
+# an Ethiopian Digital ID line like "ሙሉ ስም | Full Name"; ontology.py
+# expands each delimiter-separated form into its components at load.
+#
+# Every alias here is either already in concepts/labels/*.yaml or was
+# read off a real specimen in this project's corpus (Italian CIE,
+# Ontario DL, UK provisional DL, Washington/California DL, Dutch ID,
+# Belgian residence permit, Ethiopian Digital ID generations, Ethiopian
+# DL, Ethiopian passport). Do not add a guessed translation.
+
+fields:
+  date_of_birth:
+    expected_type: date
+    expected_count: 1
+    extraction_priority: 20
+    allow_unlabeled: true
+    validators:
+      min_year: 1900
+      max_age: 120
+    aliases:
+      - DOB
+      - Date of Birth
+      - Birth Date
+      - Birthdate
+      - D.O.B
+      - D.O.B.
+      - Geburtsdatum
+      - Fecha de nacimiento
+      - Data di nascita
+      - Date de naissance
+      - 出生日期
+      - 生年月日
+      - تاريخ الميلاد
+      - የትውልድ ቀን | Date of Birth
+      - የልደት ቀን | Date of Birth
+      - የተወለዱበት ቀን | Date of Birth
+      - geboortedatum / date of birth
+      - GEBOORTEDATUM / DATE OF BIRTH
+      - Födelsedatum / Date of birth
+      - Födelsedatum / Date of Birth
+      - DOB/DDN
+      - LUOGO E DATA DI NASCITA / PLACE AND DATE OF BIRTH
+      - Geburtstag/Date of birth/Date de naissance
+      - Date of birth/Date de naissance
+      - Date of Birth / تاريخ الميلاد
+
+  date_of_issue:
+    expected_type: date
+    expected_count: 1
+    extraction_priority: 40
+    allow_unlabeled: true
+    validators:
+      future_grace_days: 60
+    aliases:
+      - ISS
+      - Issue Date
+      - Date of Issue
+      - Date Issued
+      - Issued
+      - Issuing Date
+      - ISS/DÉL.
+      - ISS/DÉL
+      - EMISSIONE / ISSUING
+      - datum van afgifte / date of issue
+      - የተሰጠበት ቀን | Date of Issue
+      - የተሰጠበት ቀን
+      - Date of Issue / تاريخ الاصدار
+
+  date_of_expiry:
+    expected_type: date
+    expected_count: 1
+    extraction_priority: 30
+    allow_unlabeled: true
+    aliases:
+      - EXP
+      - Exp
+      - Expiry
+      - Expiry Date
+      - Date of Expiry
+      - Expiration
+      - Expiration Date
+      - Expires
+      - Exp Date
+      - Valid Until
+      - EXP./EXP.
+      - Licence Expires
+      - SCADENZA / EXPIRY
+      - Date d'expiration
+      - Gültig bis/Date of expiry/Date d'expiration
+      - Gultig bis/Date of expiry
+      - Date of expiry/Date d'expiration
+      - geldig tot / date of expiry
+      - GELDIG TOT / CARD EXPIRY
+      - Sista giltighetsdag / Date of expiry
+      - Sista giltighetsdag / Date of Expiry
+      - Expiry Date / تاريخ الانتهاء
+      - የሚያበቃበት ቀን | Date of Expiry
+      - የሚያበቃበት ቀን
+
+  document_number:
+    expected_type: identifier
+    expected_count: 1
+    extraction_priority: 10
+    allow_unlabeled: true
+    aliases:
+      - Document Number
+      - Document No
+      - Document No.
+      - Passport No
+      - Passport Number
+      - License No
+      - Licence No
+      - Driver License No
+      - Driver Licence No
+      - Permit No
+      - National ID
+      - Card Number
+      - ID No
+      - ID Number
+      - Customer identifier
+      - LIC#
+      - documentnummer / document no.
+      - documentnummer / document no
+      - Kortnr. / Card No.
+      - Kortnr / Card No
+      - FAN
+      - FCN
+      - FIN
+      - ካርድ ቁጥር / FAN
+      - የመንጃ ፈቃድ ቁ. /License No
+
+  personal_number:
+    expected_type: identifier
+    expected_count: 1
+    extraction_priority: 12
+    allow_unlabeled: true
+    aliases:
+      - Personnr. / Personal Id. No.
+      - Personnr / Personal Id. No
+      - Personal Id. No.
+      - Personal identity number
+      - Personnummer
+      - National register number
+      - RIJKSREGISTERNR
+      - Rijksregisternr.
+
+  surname:
+    expected_type: name
+    expected_count: 1
+    extraction_priority: 15
+    allow_unlabeled: false
+    aliases:
+      - Surname
+      - Last Name
+      - Family Name
+      - Nom
+      - Nachname
+      - Apellido
+      - Cognome
+      - 姓
+      - መጠሪያ ስም
+      - COGNOME / SURNAME
+      - naam / surname
+      - achternaam / surname
+      - achternaam
+      - Efternamn / Surname
+      - Efternamn
+      - Name/Surname/Nom
+      - Name / Surname / Nom
+
+  given_names:
+    expected_type: name
+    expected_count: 1
+    extraction_priority: 16
+    allow_unlabeled: false
+    aliases:
+      - Given Name
+      - Given Names
+      - First Name
+      - Forename
+      - Forenames
+      - Prenom
+      - Prénom
+      - Vorname
+      - Nombre
+      - 名
+      - የመጀመሪያ ስም
+      - NOME / NAME
+      - voornamen / given names
+      - voornamen
+      - Förnamn / Given names
+      - Förnamn
+      - Given names/Prénoms
+      - Vornamen/Given names/Prénoms
+      - Vornamen
+      - NOME / NAME
+
+  full_name:
+    expected_type: name
+    expected_count: 1
+    extraction_priority: 17
+    allow_unlabeled: false
+    aliases:
+      - Full Name
+      - ሙሉ ስም | Full Name
+      - ሙሉ ስም | First, Middle, Surname
+      - First, Middle, Surname
+      - NAAM Voornamen / SURNAME Forenames
+      - NAME/NOM
+      - Name / الاسم
+
+  sex:
+    expected_type: enum
+    expected_count: 1
+    extraction_priority: 50
+    allow_unlabeled: true
+    values:
+      - M
+      - F
+      - X
+      - Male
+      - Female
+      - ወንድ
+      - M/M
+      - V/F
+      - M/F
+      - W/M
+    aliases:
+      - Sex
+      - Gender
+      - Sexe
+      - Sexo
+      - SESSO / SEX
+      - SEX/SEXE
+      - geslacht / sex
+      - GESLACHT / SEX
+      - Kön / Sex
+      - ጾታ | Sex
+      - ጾታ
+
+  nationality:
+    expected_type: name
+    expected_count: 1
+    extraction_priority: 45
+    allow_unlabeled: false
+    aliases:
+      - Nationality
+      - Citizenship
+      - CITTADINANZA / NATIONALITY
+      - nationaliteit / nationality
+      - NATIONALITEIT / NATIONALITY
+      - Nationalitet / Nationality
+      - Nationality / الجنسية
+      - Nationality/Nationalité
+      - ዜግነት | Nationality
+      - ዜግነት Nationality
+      - Staatsangehörigkeit/Nationality/Nationalité
+      - Staatsangehorigkeit/Nationality
+
+  place_of_birth:
+    expected_type: name
+    expected_count: 1
+    extraction_priority: 55
+    allow_unlabeled: false
+    aliases:
+      - Place of Birth
+      - Birthplace
+      - Lugar de nacimiento
+      - Place of birth/Lieu de naissance
+      - Geburtsort/Place of birth/Lieu de naissance
+      - Geburtsort
+      - የትውልድ ቦታ
+
+  license_class:
+    expected_type: identifier
+    expected_count: 1
+    extraction_priority: 60
+    allow_unlabeled: false
+    aliases:
+      - Classification
+      - Classifications
+      - Grade
+      - ደረጃ/Grade
+
+  license_restrictions:
+    expected_type: identifier
+    expected_count: 1
+    extraction_priority: 70
+    allow_unlabeled: false
+    aliases:
+      - Restrictions
+      - Restriction
+      - Restr
+      - REST./COND.
+      - RSTR
+
+  license_endorsements:
+    expected_type: identifier
+    expected_count: 1
+    extraction_priority: 71
+    allow_unlabeled: false
+    aliases:
+      - Endorsements
+      - Endorsement
+
+  permit_type:
+    expected_type: identifier
+    expected_count: 1
+    extraction_priority: 72
+    allow_unlabeled: false
+    aliases:
+      - Type of Permit
+      - Permit Type
+      - SOORT TITEL / TYPE OF PERMIT
+      - Type of permit
+      - Categoria / Category
+      - Category of permit
+
+  phone_number:
+    expected_type: identifier
+    expected_count: 1
+    extraction_priority: 65
+    allow_unlabeled: false
+    aliases:
+      - Tel
+      - Tel.
+      - Telephone
+      - Phone
+      - Mobile
+      - ስልክ | Tel
+      - ስልክ

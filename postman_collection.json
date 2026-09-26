@@ -1,0 +1,566 @@
+{
+  "info": {
+    "name": "ID Document Extraction API v5.0",
+    "description": "Multi-channel identity document extraction, ported from ID-Document-Extractor with Gemini replaced by local Ollama vision models. Channels, most-trustworthy first: barcode/QR (PDF417 AAMVA, Ethiopian FAN/QR) -> MRZ (ICAO 9303 TD1/TD2/TD3, checksum-verified) -> Ollama AI-vision crosscheck -> Ollama AI-vision universal fallback -> generic OCR label-alias sweep (the floor, never returns an empty profile). See idx/pipeline.py.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "id-extract-ai-agents-collection"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string",
+      "description": "Populated automatically after a successful async extraction request"
+    },
+    {
+      "key": "callback_url",
+      "value": "https://webhook.site/REPLACE-WITH-YOUR-UNIQUE-ID",
+      "type": "string",
+      "description": "Where the server POSTs the completed result. Get a free throwaway receiver URL at https://webhook.site to test, or point this at your own endpoint."
+    },
+    {
+      "key": "doc_type",
+      "value": "auto",
+      "type": "string",
+      "description": "passport | national_id | drivers_license | residence_permit | auto"
+    },
+    {
+      "key": "universal_job_id",
+      "value": "",
+      "type": "string",
+      "description": "Populated automatically after a universal async request"
+    }
+  ],
+  "item": [
+    {
+      "name": "Service Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            ""
+          ]
+        },
+        "description": "Service info, pipeline architecture, supported document types/languages, and endpoint list."
+      },
+      "response": []
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Ollama model readiness, local OCR engine status, GPU info, active job count."
+      },
+      "response": []
+    },
+    {
+      "name": "List Pipeline Channels",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/agents",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "agents"
+          ]
+        },
+        "description": "The 5 extraction channels in precedence order (barcode > MRZ > label-anchored OCR > VLM > signature sweep) with what each covers and how much it's trusted."
+      },
+      "response": []
+    },
+    {
+      "name": "Extract ID (Async - poll)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/extract/id?doc_type={{doc_type}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "extract",
+            "id"
+          ],
+          "query": [
+            {
+              "key": "doc_type",
+              "value": "{{doc_type}}",
+              "description": "passport | national_id | drivers_license | residence_permit | auto"
+            }
+          ]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "file_back",
+              "type": "file",
+              "src": [],
+              "disabled": true,
+              "description": "Optional — back of card (AAMVA PDF417, Ethiopian ID QR). Order doesn't matter, both sides are classified by content."
+            }
+          ]
+        },
+        "description": "Default behavior: returns job_id immediately; poll GET /extract/status/{job_id} for the result.\n\nExtractions that fall through to the Ollama AI-vision tier can take several minutes on this hardware — for a production integration, prefer 'Extract ID (Async - callback_url)' instead of polling.\n\nSupported documents: National ID, Passport, Driver's License, Residence Permit.\nSupported formats: JPG, PNG, WEBP, BMP."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const data = pm.response.json();",
+              "    if (data.job_id) {",
+              "        pm.collectionVariables.set('job_id', data.job_id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Extract ID (Async - callback_url)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/extract/id?doc_type={{doc_type}}&callback_url={{callback_url}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "extract",
+            "id"
+          ],
+          "query": [
+            {
+              "key": "doc_type",
+              "value": "{{doc_type}}"
+            },
+            {
+              "key": "callback_url",
+              "value": "{{callback_url}}",
+              "description": "http(s) URL the server POSTs the full completed result to when the job finishes. Retries 3x with backoff on delivery failure."
+            }
+          ]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "file_back",
+              "type": "file",
+              "src": [],
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Recommended for production integrations. Returns job_id immediately (no long-held connection, no polling) — the server POSTs the full result to callback_url once the pipeline finishes. Mutually exclusive with wait=true."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const data = pm.response.json();",
+              "    if (data.job_id) {",
+              "        pm.collectionVariables.set('job_id', data.job_id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Get Job Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/extract/status/{{job_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "extract",
+            "status",
+            "{{job_id}}"
+          ]
+        },
+        "description": "Poll for the result of an async extraction job. Uses the {{job_id}} collection variable set by an async extraction request. If the job was submitted with callback_url, the completed result also includes a callback_delivery field. The completed result's `document` field is the full ExtractedIDDocument (per-field value/raw/state/confidence/source/source_tier/agreeing_sources) — `extracted_data` is a flattened convenience view of the same data."
+      },
+      "response": []
+    },
+    {
+      "name": "Extract ID (Sync)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/extract/id/sync?doc_type={{doc_type}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "extract",
+            "id",
+            "sync"
+          ],
+          "query": [
+            {
+              "key": "doc_type",
+              "value": "{{doc_type}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "file_back",
+              "type": "file",
+              "src": [],
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Blocks and returns the full result directly in one call (equivalent to POST /extract/id?wait=true). If a barcode or MRZ resolves the document, this is typically fast (seconds); if it falls through to the Ollama AI-vision tier it can take several minutes — make sure Postman's request timeout is raised (Settings > General > Request Timeout) or this will time out client-side before the server finishes."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Job",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/extract/job/{{job_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "extract",
+            "job",
+            "{{job_id}}"
+          ]
+        },
+        "description": "Remove a job's record from the in-memory job store."
+      },
+      "response": []
+    },
+    {
+      "name": "Universal Engine (any country / script / ID type)",
+      "description": "5-agent Ollama team driven by universal_id_extraction_prompts.py, with every value checked by deterministic code: MRZ check digits, barcodes, national-ID checksums, calendar arithmetic and OCR grounding. mode=full (~1.5-2 min) or mode=fast (~15 s). Raise Postman's request timeout for the sync calls.",
+      "item": [
+        {
+          "name": "Universal Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/universal/info",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "universal",
+                "info"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Universal Extract (Sync, fast)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "file_back",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/universal/extract/sync?mode=fast&doc_type={{doc_type}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "universal",
+                "extract",
+                "sync"
+              ],
+              "query": [
+                {
+                  "key": "mode",
+                  "value": "fast"
+                },
+                {
+                  "key": "doc_type",
+                  "value": "{{doc_type}}"
+                }
+              ]
+            },
+            "description": "One qwen2.5vl read + full deterministic verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Universal Extract (Sync, full 5-agent)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "file_back",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/universal/extract/sync?mode=full&doc_type={{doc_type}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "universal",
+                "extract",
+                "sync"
+              ],
+              "query": [
+                {
+                  "key": "mode",
+                  "value": "full"
+                },
+                {
+                  "key": "doc_type",
+                  "value": "{{doc_type}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Universal Extract (Async - poll)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "file_back",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/universal/extract?mode=full&doc_type={{doc_type}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "universal",
+                "extract"
+              ],
+              "query": [
+                {
+                  "key": "mode",
+                  "value": "full"
+                },
+                {
+                  "key": "doc_type",
+                  "value": "{{doc_type}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Universal Extract (Async - callback_url)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "file_back",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/universal/extract?mode=full&callback_url={{callback_url}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "universal",
+                "extract"
+              ],
+              "query": [
+                {
+                  "key": "mode",
+                  "value": "full"
+                },
+                {
+                  "key": "callback_url",
+                  "value": "{{callback_url}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Universal Job Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/universal/status/{{universal_job_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "universal",
+                "status",
+                "{{universal_job_id}}"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Universal Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/universal/job/{{universal_job_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "universal",
+                "job",
+                "{{universal_job_id}}"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

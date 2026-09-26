@@ -1,0 +1,84 @@
+# AAMVA per-jurisdiction data -- see aamva.py's module docstring for the
+# discipline this file must follow: every entry here was read directly
+# off a REAL card processed during development, never guessed, scraped,
+# or inferred from a pattern in the entries already present. Extend only
+# from a specific state's own published DMV table, or another real
+# confirmed card -- never by inference (e.g. do NOT assume a class letter
+# means the same thing in a state not listed just because it does in two
+# that are).
+#
+# This is DATA, not code, on purpose: CLAUDE.md's coding standard is that
+# every jurisdiction rule lives here, never as an `if state == "..."`
+# branch in Python. Adding a new confirmed jurisdiction should only ever
+# require editing this file, not aamva.py itself.
+
+# A raw class LETTER means different things in different jurisdictions --
+# AAMVA doesn't standardize this the way it standardizes the barcode's
+# element IDs; each state defines its own class-lettering scheme. Key is
+# "<jurisdiction>:<raw class letter as printed>", value is the canonical
+# class name. An unmapped (jurisdiction, letter) pair is deliberately left
+# out rather than guessed at -- see schema.py's `license_class_canonical`
+# docstring.
+class_code_canonical:
+  "CA:C": standard_operator
+  "MD:C": standard_operator
+  "VA:D": standard_operator
+  "NC:C": standard_operator
+
+# Which of the optional (non-schema) fields a specific jurisdiction has
+# been directly OBSERVED to print on its front -- confirmed against real
+# cards processed during development, not authoritative DMV
+# documentation. Absence of a key means "not yet observed", not "doesn't
+# print it". No behavior currently branches on this; it exists as a
+# foundation for the per-jurisdiction awareness repeatedly identified as
+# worth having (e.g. eventually distinguishing "this field is genuinely
+# blank on this card type" from "OCR probably missed it").
+field_profile:
+  CA:
+    weight: true
+    eye_color: true
+    hair_color: true
+  WA:
+    weight: true
+    eye_color: true
+    hair_color: false
+  MD:
+    weight: true
+    eye_color: false
+    hair_color: false
+  VA:
+    weight: false
+    eye_color: true
+    hair_color: false
+  NC:
+    weight: false
+    eye_color: true
+    hair_color: true
+
+# How many years a jurisdiction's license term normally runs (date_of_issue
+# to date_of_expiry, landing on the birthday) -- a NEUTRAL, purely
+# descriptive fact used only to check whether a specific card's own term
+# matches its jurisdiction's typical one (see `front_only_consistency_
+# checks`'s `term_matches_jurisdiction_standard`). This deliberately does
+# NOT feed into `human_review_required`, a warning, or any scoring/
+# eligibility logic -- a non-standard term has entirely common, benign
+# explanations (a replacement card after an address change, a lost card,
+# a name correction, all of which keep the ORIGINAL expiry date while
+# reissuing at a different time) and is not itself evidence of anything
+# about the holder. The fact is recorded; the interpretation is left to
+# whoever has the actual issuance history.
+#
+# WA: confirmed directly from a real card with a clean, non-reissued term
+# (date_of_issue to date_of_expiry, landing on the birthday, measured at
+# exactly 8 years plus a few weeks). MD: confirmed via a real card that
+# does NOT show a clean 8-year term itself (it shows a shorter, reissued-
+# looking one) -- the standard was established from what an unreissued
+# original would need to have been for the observed expiry date to make
+# sense (2031-04-18 minus 8 years lands on a plausible original issue
+# date), not from directly measuring a clean example. Recorded here as
+# real, but on slightly different evidentiary footing than WA's -- worth
+# re-confirming against a clean (non-reissued) Maryland card if one turns
+# up in a future real specimen.
+standard_term_years:
+  WA: 8
+  MD: 8

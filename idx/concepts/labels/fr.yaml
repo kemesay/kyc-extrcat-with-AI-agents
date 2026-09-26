@@ -1,0 +1,13 @@
+# French label aliases -- see en.yaml's header for sourcing discipline.
+surname:
+  - nom
+given_names:
+  - prénom
+  - prenom
+date_of_birth:
+  - date de naissance
+sex:
+  - sexe
+nationality:
+  - nationalité
+  - nationalite

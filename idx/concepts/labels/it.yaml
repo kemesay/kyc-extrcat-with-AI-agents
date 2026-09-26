@@ -1,0 +1,5 @@
+# Italian label aliases -- see en.yaml's header for sourcing discipline.
+surname:
+  - cognome
+date_of_birth:
+  - data di nascita

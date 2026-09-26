@@ -1,0 +1,2389 @@
+comment: Issuing-state and holder-nationality codes from ICAO Doc 9303 Part 3 (ISO 3166-1 alpha-3 plus
+  ICAO exceptional codes). PRADO uses the same three-letter issuing-state codes. Canonical labels are
+  ALL CAPS (ETH / ETHIOPIA / ETHIOPIAN). Knowing any of code, country_name, or nationality resolves the
+  other two. That is canonicalisation of ONE printed fact — it is not permission to copy issuing country
+  onto nationality or the reverse (a Belgian permit stating ETH is the proof).
+entities:
+- code: ABW
+  alpha2: AW
+  country_name: ARUBA
+  nationality: ARUBAN
+  kind: state
+  aliases:
+  - AW
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: AFG
+  alpha2: AF
+  country_name: AFGHANISTAN
+  nationality: AFGHAN
+  kind: state
+  aliases:
+  - AF
+  - Islamic Republic of Afghanistan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: AGO
+  alpha2: AO
+  country_name: ANGOLA
+  nationality: ANGOLAN
+  kind: state
+  aliases:
+  - AO
+  - Republic of Angola
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: AIA
+  alpha2: AI
+  country_name: ANGUILLA
+  nationality: ''
+  kind: state
+  aliases:
+  - AI
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ALA
+  alpha2: AX
+  country_name: ÅLAND ISLANDS
+  nationality: ÅLANDIC
+  kind: state
+  aliases:
+  - AX
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ALB
+  alpha2: AL
+  country_name: ALBANIA
+  nationality: ALBANIAN
+  kind: state
+  aliases:
+  - AL
+  - Republic of Albania
+  - Shqiptar
+  - Shqipëria
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: AND
+  alpha2: AD
+  country_name: ANDORRA
+  nationality: ANDORRAN
+  kind: state
+  aliases:
+  - AD
+  - Principality of Andorra
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ARE
+  alpha2: AE
+  country_name: UNITED ARAB EMIRATES
+  nationality: EMIRATI
+  kind: state
+  aliases:
+  - AE
+  - UAE
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ARG
+  alpha2: AR
+  country_name: ARGENTINA
+  nationality: ARGENTINE
+  kind: state
+  aliases:
+  - AR
+  - Argentine Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ARM
+  alpha2: AM
+  country_name: ARMENIA
+  nationality: ARMENIAN
+  kind: state
+  aliases:
+  - AM
+  - Republic of Armenia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ASM
+  alpha2: AS
+  country_name: AMERICAN SAMOA
+  nationality: AMERICAN SAMOAN
+  kind: state
+  aliases:
+  - AS
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ATA
+  alpha2: AQ
+  country_name: ANTARCTICA
+  nationality: ANTARCTIC
+  kind: state
+  aliases:
+  - AQ
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ATF
+  alpha2: TF
+  country_name: FRENCH SOUTHERN TERRITORIES
+  nationality: ''
+  kind: state
+  aliases:
+  - TF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ATG
+  alpha2: AG
+  country_name: ANTIGUA AND BARBUDA
+  nationality: ANTIGUAN
+  kind: state
+  aliases:
+  - AG
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: AUS
+  alpha2: AU
+  country_name: AUSTRALIA
+  nationality: AUSTRALIAN
+  kind: state
+  aliases:
+  - AU
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: AUT
+  alpha2: AT
+  country_name: AUSTRIA
+  nationality: AUSTRIAN
+  kind: state
+  aliases:
+  - AT
+  - Republic of Austria
+  - Österreich
+  - Osterreich
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: AZE
+  alpha2: AZ
+  country_name: AZERBAIJAN
+  nationality: AZERBAIJANI
+  kind: state
+  aliases:
+  - AZ
+  - Republic of Azerbaijan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BDI
+  alpha2: BI
+  country_name: BURUNDI
+  nationality: BURUNDIAN
+  kind: state
+  aliases:
+  - BI
+  - Republic of Burundi
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BEL
+  alpha2: BE
+  country_name: BELGIUM
+  nationality: BELGIAN
+  kind: state
+  aliases:
+  - BE
+  - Kingdom of Belgium
+  - Belgique
+  - Belgie
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BEN
+  alpha2: BJ
+  country_name: BENIN
+  nationality: BENINESE
+  kind: state
+  aliases:
+  - BJ
+  - Republic of Benin
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BES
+  alpha2: BQ
+  country_name: BONAIRE, SINT EUSTATIUS AND SABA
+  nationality: CARIBBEAN NETHERLANDS
+  kind: state
+  aliases:
+  - BQ
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BFA
+  alpha2: BF
+  country_name: BURKINA FASO
+  nationality: BURKINABE
+  kind: state
+  aliases:
+  - BF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BGD
+  alpha2: BD
+  country_name: BANGLADESH
+  nationality: BANGLADESHI
+  kind: state
+  aliases:
+  - BD
+  - People's Republic of Bangladesh
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BGR
+  alpha2: BG
+  country_name: BULGARIA
+  nationality: BULGARIAN
+  kind: state
+  aliases:
+  - BG
+  - Republic of Bulgaria
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BHR
+  alpha2: BH
+  country_name: BAHRAIN
+  nationality: BAHRAINI
+  kind: state
+  aliases:
+  - BH
+  - Kingdom of Bahrain
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BHS
+  alpha2: BS
+  country_name: BAHAMAS
+  nationality: BAHAMIAN
+  kind: state
+  aliases:
+  - BS
+  - Commonwealth of the Bahamas
+  - The Bahamas
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BIH
+  alpha2: BA
+  country_name: BOSNIA AND HERZEGOVINA
+  nationality: BOSNIAN
+  kind: state
+  aliases:
+  - BA
+  - Republic of Bosnia and Herzegovina
+  - Bosnian
+  - Herzegovinian
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BLM
+  alpha2: BL
+  country_name: SAINT BARTHÉLEMY
+  nationality: SAINT-BARTHÉLEMY
+  kind: state
+  aliases:
+  - BL
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BLR
+  alpha2: BY
+  country_name: BELARUS
+  nationality: BELARUSIAN
+  kind: state
+  aliases:
+  - BY
+  - Republic of Belarus
+  - Byelorussian
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BLZ
+  alpha2: BZ
+  country_name: BELIZE
+  nationality: BELIZEAN
+  kind: state
+  aliases:
+  - BZ
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BMU
+  alpha2: BM
+  country_name: BERMUDA
+  nationality: BERMUDIAN
+  kind: state
+  aliases:
+  - BM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BOL
+  alpha2: BO
+  country_name: BOLIVIA
+  nationality: BOLIVIAN
+  kind: state
+  aliases:
+  - BO
+  - Plurinational State of Bolivia
+  - Bolivia (Plurinational State of)
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BRA
+  alpha2: BR
+  country_name: BRAZIL
+  nationality: BRAZILIAN
+  kind: state
+  aliases:
+  - BR
+  - Federative Republic of Brazil
+  - Brasil
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BRB
+  alpha2: BB
+  country_name: BARBADOS
+  nationality: BARBADIAN
+  kind: state
+  aliases:
+  - BB
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BRN
+  alpha2: BN
+  country_name: BRUNEI DARUSSALAM
+  nationality: BRUNEIAN
+  kind: state
+  aliases:
+  - BN
+  - Brunei
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BTN
+  alpha2: BT
+  country_name: BHUTAN
+  nationality: BHUTANESE
+  kind: state
+  aliases:
+  - BT
+  - Kingdom of Bhutan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BVT
+  alpha2: BV
+  country_name: BOUVET ISLAND
+  nationality: BOUVET
+  kind: state
+  aliases:
+  - BV
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: BWA
+  alpha2: BW
+  country_name: BOTSWANA
+  nationality: BOTSWANAN
+  kind: state
+  aliases:
+  - BW
+  - Republic of Botswana
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CAF
+  alpha2: CF
+  country_name: CENTRAL AFRICAN REPUBLIC
+  nationality: CENTRAL AFRICAN
+  kind: state
+  aliases:
+  - CF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CAN
+  alpha2: CA
+  country_name: CANADA
+  nationality: CANADIAN
+  kind: state
+  aliases:
+  - CA
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CCK
+  alpha2: CC
+  country_name: COCOS (KEELING) ISLANDS
+  nationality: COCOS ISLANDER
+  kind: state
+  aliases:
+  - CC
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CHE
+  alpha2: CH
+  country_name: SWITZERLAND
+  nationality: SWISS
+  kind: state
+  aliases:
+  - CH
+  - Swiss Confederation
+  - Schweiz
+  - Suisse
+  - Svizzera
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CHL
+  alpha2: CL
+  country_name: CHILE
+  nationality: CHILEAN
+  kind: state
+  aliases:
+  - CL
+  - Republic of Chile
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CHN
+  alpha2: CN
+  country_name: CHINA
+  nationality: CHINESE
+  kind: state
+  aliases:
+  - CN
+  - People's Republic of China
+  - PRC
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CIV
+  alpha2: CI
+  country_name: CÔTE D'IVOIRE
+  nationality: IVORIAN
+  kind: state
+  aliases:
+  - CI
+  - Republic of Côte d'Ivoire
+  - Ivory Coast
+  - Cote d'Ivoire
+  - Cote dIvoire
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CMR
+  alpha2: CM
+  country_name: CAMEROON
+  nationality: CAMEROONIAN
+  kind: state
+  aliases:
+  - CM
+  - Republic of Cameroon
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: COD
+  alpha2: CD
+  country_name: DEMOCRATIC REPUBLIC OF THE CONGO
+  nationality: CONGOLESE
+  kind: state
+  aliases:
+  - CD
+  - DRC
+  - Congo-Kinshasa
+  - Zaire
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: COG
+  alpha2: CG
+  country_name: CONGO
+  nationality: CONGOLESE
+  kind: state
+  aliases:
+  - CG
+  - Republic of the Congo
+  - Congo-Brazzaville
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: COK
+  alpha2: CK
+  country_name: COOK ISLANDS
+  nationality: COOK ISLANDER
+  kind: state
+  aliases:
+  - CK
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: COL
+  alpha2: CO
+  country_name: COLOMBIA
+  nationality: COLOMBIAN
+  kind: state
+  aliases:
+  - CO
+  - Republic of Colombia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: COM
+  alpha2: KM
+  country_name: COMOROS
+  nationality: COMORIAN
+  kind: state
+  aliases:
+  - KM
+  - Union of the Comoros
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CPV
+  alpha2: CV
+  country_name: CABO VERDE
+  nationality: CABO VERDEAN
+  kind: state
+  aliases:
+  - CV
+  - Republic of Cabo Verde
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CRI
+  alpha2: CR
+  country_name: COSTA RICA
+  nationality: COSTA RICAN
+  kind: state
+  aliases:
+  - CR
+  - Republic of Costa Rica
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CUB
+  alpha2: CU
+  country_name: CUBA
+  nationality: CUBAN
+  kind: state
+  aliases:
+  - CU
+  - Republic of Cuba
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CUW
+  alpha2: CW
+  country_name: CURAÇAO
+  nationality: CURAÇAOAN
+  kind: state
+  aliases:
+  - CW
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CXR
+  alpha2: CX
+  country_name: CHRISTMAS ISLAND
+  nationality: CHRISTMAS ISLANDER
+  kind: state
+  aliases:
+  - CX
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CYM
+  alpha2: KY
+  country_name: CAYMAN ISLANDS
+  nationality: CAYMANIAN
+  kind: state
+  aliases:
+  - KY
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CYP
+  alpha2: CY
+  country_name: CYPRUS
+  nationality: CYPRIOT
+  kind: state
+  aliases:
+  - CY
+  - Republic of Cyprus
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: CZE
+  alpha2: CZ
+  country_name: CZECHIA
+  nationality: CZECH
+  kind: state
+  aliases:
+  - CZ
+  - Czech Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: DEU
+  alpha2: DE
+  country_name: GERMANY
+  nationality: GERMAN
+  kind: state
+  aliases:
+  - DE
+  - Federal Republic of Germany
+  - D
+  - Deutschland
+  - Deutsch
+  - GER
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: DJI
+  alpha2: DJ
+  country_name: DJIBOUTI
+  nationality: DJIBOUTIAN
+  kind: state
+  aliases:
+  - DJ
+  - Republic of Djibouti
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: DMA
+  alpha2: DM
+  country_name: DOMINICA
+  nationality: DOMINICAN
+  kind: state
+  aliases:
+  - DM
+  - Commonwealth of Dominica
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: DNK
+  alpha2: DK
+  country_name: DENMARK
+  nationality: DANISH
+  kind: state
+  aliases:
+  - DK
+  - Kingdom of Denmark
+  - Dansk
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: DOM
+  alpha2: DO
+  country_name: DOMINICAN REPUBLIC
+  nationality: DOMINICAN
+  kind: state
+  aliases:
+  - DO
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: DZA
+  alpha2: DZ
+  country_name: ALGERIA
+  nationality: ALGERIAN
+  kind: state
+  aliases:
+  - DZ
+  - People's Democratic Republic of Algeria
+  - Algerie
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ECU
+  alpha2: EC
+  country_name: ECUADOR
+  nationality: ECUADORIAN
+  kind: state
+  aliases:
+  - EC
+  - Republic of Ecuador
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: EGY
+  alpha2: EG
+  country_name: EGYPT
+  nationality: EGYPTIAN
+  kind: state
+  aliases:
+  - EG
+  - Arab Republic of Egypt
+  - Misr
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ERI
+  alpha2: ER
+  country_name: ERITREA
+  nationality: ERITREAN
+  kind: state
+  aliases:
+  - ER
+  - the State of Eritrea
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ESH
+  alpha2: EH
+  country_name: WESTERN SAHARA
+  nationality: SAHRAWI
+  kind: state
+  aliases:
+  - EH
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ESP
+  alpha2: ES
+  country_name: SPAIN
+  nationality: SPANISH
+  kind: state
+  aliases:
+  - ES
+  - Kingdom of Spain
+  - España
+  - Espanola
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: EST
+  alpha2: EE
+  country_name: ESTONIA
+  nationality: ESTONIAN
+  kind: state
+  aliases:
+  - EE
+  - Republic of Estonia
+  - Eesti
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ETH
+  alpha2: ET
+  country_name: ETHIOPIA
+  nationality: ETHIOPIAN
+  kind: state
+  aliases:
+  - ET
+  - Federal Democratic Republic of Ethiopia
+  - ኢትዮጵያ
+  - Habesha
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: FIN
+  alpha2: FI
+  country_name: FINLAND
+  nationality: FINNISH
+  kind: state
+  aliases:
+  - FI
+  - Republic of Finland
+  - Suomi
+  - Finnish
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: FJI
+  alpha2: FJ
+  country_name: FIJI
+  nationality: FIJIAN
+  kind: state
+  aliases:
+  - FJ
+  - Republic of Fiji
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: FLK
+  alpha2: FK
+  country_name: FALKLAND ISLANDS (MALVINAS)
+  nationality: FALKLAND ISLANDER
+  kind: state
+  aliases:
+  - FK
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: FRA
+  alpha2: FR
+  country_name: FRANCE
+  nationality: FRENCH
+  kind: state
+  aliases:
+  - FR
+  - French Republic
+  - Française
+  - Francais
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: FRO
+  alpha2: FO
+  country_name: FAROE ISLANDS
+  nationality: FAROESE
+  kind: state
+  aliases:
+  - FO
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: FSM
+  alpha2: FM
+  country_name: MICRONESIA
+  nationality: MICRONESIAN
+  kind: state
+  aliases:
+  - FM
+  - Federated States of Micronesia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GAB
+  alpha2: GA
+  country_name: GABON
+  nationality: GABONESE
+  kind: state
+  aliases:
+  - GA
+  - Gabonese Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GBR
+  alpha2: GB
+  country_name: UNITED KINGDOM
+  nationality: BRITISH
+  kind: state
+  aliases:
+  - GB
+  - United Kingdom of Great Britain and Northern Ireland
+  - UK
+  - Great Britain
+  - Britain
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GEO
+  alpha2: GE
+  country_name: GEORGIA
+  nationality: GEORGIAN
+  kind: state
+  aliases:
+  - GE
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GGY
+  alpha2: GG
+  country_name: GUERNSEY
+  nationality: GUERNSEY
+  kind: state
+  aliases:
+  - GG
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GHA
+  alpha2: GH
+  country_name: GHANA
+  nationality: GHANAIAN
+  kind: state
+  aliases:
+  - GH
+  - Republic of Ghana
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GIB
+  alpha2: GI
+  country_name: GIBRALTAR
+  nationality: GIBRALTARIAN
+  kind: state
+  aliases:
+  - GI
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GIN
+  alpha2: GN
+  country_name: GUINEA
+  nationality: GUINEAN
+  kind: state
+  aliases:
+  - GN
+  - Republic of Guinea
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GLP
+  alpha2: GP
+  country_name: GUADELOUPE
+  nationality: ''
+  kind: state
+  aliases:
+  - GP
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GMB
+  alpha2: GM
+  country_name: GAMBIA
+  nationality: GAMBIAN
+  kind: state
+  aliases:
+  - GM
+  - Republic of the Gambia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GNB
+  alpha2: GW
+  country_name: GUINEA-BISSAU
+  nationality: BISSAU-GUINEAN
+  kind: state
+  aliases:
+  - GW
+  - Republic of Guinea-Bissau
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GNQ
+  alpha2: GQ
+  country_name: EQUATORIAL GUINEA
+  nationality: EQUATORIAL GUINEAN
+  kind: state
+  aliases:
+  - GQ
+  - Republic of Equatorial Guinea
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GRC
+  alpha2: GR
+  country_name: GREECE
+  nationality: GREEK
+  kind: state
+  aliases:
+  - GR
+  - Hellenic Republic
+  - Hellas
+  - Hellenic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GRD
+  alpha2: GD
+  country_name: GRENADA
+  nationality: GRENADIAN
+  kind: state
+  aliases:
+  - GD
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GRL
+  alpha2: GL
+  country_name: GREENLAND
+  nationality: GREENLANDIC
+  kind: state
+  aliases:
+  - GL
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GTM
+  alpha2: GT
+  country_name: GUATEMALA
+  nationality: GUATEMALAN
+  kind: state
+  aliases:
+  - GT
+  - Republic of Guatemala
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GUF
+  alpha2: GF
+  country_name: FRENCH GUIANA
+  nationality: ''
+  kind: state
+  aliases:
+  - GF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GUM
+  alpha2: GU
+  country_name: GUAM
+  nationality: GUAMANIAN
+  kind: state
+  aliases:
+  - GU
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: GUY
+  alpha2: GY
+  country_name: GUYANA
+  nationality: GUYANESE
+  kind: state
+  aliases:
+  - GY
+  - Republic of Guyana
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: HKG
+  alpha2: HK
+  country_name: HONG KONG
+  nationality: HONGKONGER
+  kind: state
+  aliases:
+  - HK
+  - Hong Kong Special Administrative Region of China
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: HMD
+  alpha2: HM
+  country_name: HEARD ISLAND AND MCDONALD ISLANDS
+  nationality: HEARD ISLAND
+  kind: state
+  aliases:
+  - HM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: HND
+  alpha2: HN
+  country_name: HONDURAS
+  nationality: HONDURAN
+  kind: state
+  aliases:
+  - HN
+  - Republic of Honduras
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: HRV
+  alpha2: HR
+  country_name: CROATIA
+  nationality: CROATIAN
+  kind: state
+  aliases:
+  - HR
+  - Republic of Croatia
+  - Hrvatska
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: HTI
+  alpha2: HT
+  country_name: HAITI
+  nationality: HAITIAN
+  kind: state
+  aliases:
+  - HT
+  - Republic of Haiti
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: HUN
+  alpha2: HU
+  country_name: HUNGARY
+  nationality: HUNGARIAN
+  kind: state
+  aliases:
+  - HU
+  - Magyar
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: IDN
+  alpha2: ID
+  country_name: INDONESIA
+  nationality: INDONESIAN
+  kind: state
+  aliases:
+  - ID
+  - Republic of Indonesia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: IMN
+  alpha2: IM
+  country_name: ISLE OF MAN
+  nationality: MANX
+  kind: state
+  aliases:
+  - IM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: IND
+  alpha2: IN
+  country_name: INDIA
+  nationality: INDIAN
+  kind: state
+  aliases:
+  - IN
+  - Republic of India
+  - Bharat
+  - Hindustani
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: IOT
+  alpha2: IO
+  country_name: BRITISH INDIAN OCEAN TERRITORY
+  nationality: BRITISH INDIAN OCEAN TERRITORY
+  kind: state
+  aliases:
+  - IO
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: IRL
+  alpha2: IE
+  country_name: IRELAND
+  nationality: IRISH
+  kind: state
+  aliases:
+  - IE
+  - Eire
+  - Éire
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: IRN
+  alpha2: IR
+  country_name: IRAN
+  nationality: IRANIAN
+  kind: state
+  aliases:
+  - IR
+  - Islamic Republic of Iran
+  - Persia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: IRQ
+  alpha2: IQ
+  country_name: IRAQ
+  nationality: IRAQI
+  kind: state
+  aliases:
+  - IQ
+  - Republic of Iraq
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ISL
+  alpha2: IS
+  country_name: ICELAND
+  nationality: ICELANDIC
+  kind: state
+  aliases:
+  - IS
+  - Republic of Iceland
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ISR
+  alpha2: IL
+  country_name: ISRAEL
+  nationality: ISRAELI
+  kind: state
+  aliases:
+  - IL
+  - State of Israel
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ITA
+  alpha2: IT
+  country_name: ITALY
+  nationality: ITALIAN
+  kind: state
+  aliases:
+  - IT
+  - Italian Republic
+  - Italia
+  - Italiana
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: JAM
+  alpha2: JM
+  country_name: JAMAICA
+  nationality: JAMAICAN
+  kind: state
+  aliases:
+  - JM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: JEY
+  alpha2: JE
+  country_name: JERSEY
+  nationality: JERSEY
+  kind: state
+  aliases:
+  - JE
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: JOR
+  alpha2: JO
+  country_name: JORDAN
+  nationality: JORDANIAN
+  kind: state
+  aliases:
+  - JO
+  - Hashemite Kingdom of Jordan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: JPN
+  alpha2: JP
+  country_name: JAPAN
+  nationality: JAPANESE
+  kind: state
+  aliases:
+  - JP
+  - Nippon
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KAZ
+  alpha2: KZ
+  country_name: KAZAKHSTAN
+  nationality: KAZAKH
+  kind: state
+  aliases:
+  - KZ
+  - Republic of Kazakhstan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KEN
+  alpha2: KE
+  country_name: KENYA
+  nationality: KENYAN
+  kind: state
+  aliases:
+  - KE
+  - Republic of Kenya
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KGZ
+  alpha2: KG
+  country_name: KYRGYZSTAN
+  nationality: KYRGYZ
+  kind: state
+  aliases:
+  - KG
+  - Kyrgyz Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KHM
+  alpha2: KH
+  country_name: CAMBODIA
+  nationality: CAMBODIAN
+  kind: state
+  aliases:
+  - KH
+  - Kingdom of Cambodia
+  - Kampuchea
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KIR
+  alpha2: KI
+  country_name: KIRIBATI
+  nationality: I-KIRIBATI
+  kind: state
+  aliases:
+  - KI
+  - Republic of Kiribati
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KNA
+  alpha2: KN
+  country_name: SAINT KITTS AND NEVIS
+  nationality: KITTITIAN
+  kind: state
+  aliases:
+  - KN
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KOR
+  alpha2: KR
+  country_name: SOUTH KOREA
+  nationality: SOUTH KOREAN
+  kind: state
+  aliases:
+  - KR
+  - Korea, Republic of
+  - Republic of Korea
+  - Korea
+  - ROK
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: KWT
+  alpha2: KW
+  country_name: KUWAIT
+  nationality: KUWAITI
+  kind: state
+  aliases:
+  - KW
+  - State of Kuwait
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LAO
+  alpha2: LA
+  country_name: LAOS
+  nationality: LAO
+  kind: state
+  aliases:
+  - LA
+  - Lao People's Democratic Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LBN
+  alpha2: LB
+  country_name: LEBANON
+  nationality: LEBANESE
+  kind: state
+  aliases:
+  - LB
+  - Lebanese Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LBR
+  alpha2: LR
+  country_name: LIBERIA
+  nationality: LIBERIAN
+  kind: state
+  aliases:
+  - LR
+  - Republic of Liberia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LBY
+  alpha2: LY
+  country_name: LIBYA
+  nationality: LIBYAN
+  kind: state
+  aliases:
+  - LY
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LCA
+  alpha2: LC
+  country_name: SAINT LUCIA
+  nationality: SAINT LUCIAN
+  kind: state
+  aliases:
+  - LC
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LIE
+  alpha2: LI
+  country_name: LIECHTENSTEIN
+  nationality: LIECHTENSTEINER
+  kind: state
+  aliases:
+  - LI
+  - Principality of Liechtenstein
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LKA
+  alpha2: LK
+  country_name: SRI LANKA
+  nationality: SRI LANKAN
+  kind: state
+  aliases:
+  - LK
+  - Democratic Socialist Republic of Sri Lanka
+  - Ceylon
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LSO
+  alpha2: LS
+  country_name: LESOTHO
+  nationality: BASOTHO
+  kind: state
+  aliases:
+  - LS
+  - Kingdom of Lesotho
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LTU
+  alpha2: LT
+  country_name: LITHUANIA
+  nationality: LITHUANIAN
+  kind: state
+  aliases:
+  - LT
+  - Republic of Lithuania
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LUX
+  alpha2: LU
+  country_name: LUXEMBOURG
+  nationality: LUXEMBOURGISH
+  kind: state
+  aliases:
+  - LU
+  - Grand Duchy of Luxembourg
+  - Luxembourgeois
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: LVA
+  alpha2: LV
+  country_name: LATVIA
+  nationality: LATVIAN
+  kind: state
+  aliases:
+  - LV
+  - Republic of Latvia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MAC
+  alpha2: MO
+  country_name: MACAO
+  nationality: MACANESE
+  kind: state
+  aliases:
+  - MO
+  - Macao Special Administrative Region of China
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MAF
+  alpha2: MF
+  country_name: SAINT MARTIN (FRENCH PART)
+  nationality: SAINT-MARTINOIS
+  kind: state
+  aliases:
+  - MF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MAR
+  alpha2: MA
+  country_name: MOROCCO
+  nationality: MOROCCAN
+  kind: state
+  aliases:
+  - MA
+  - Kingdom of Morocco
+  - Maroc
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MCO
+  alpha2: MC
+  country_name: MONACO
+  nationality: MONEGASQUE
+  kind: state
+  aliases:
+  - MC
+  - Principality of Monaco
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MDA
+  alpha2: MD
+  country_name: MOLDOVA
+  nationality: MOLDOVAN
+  kind: state
+  aliases:
+  - MD
+  - Republic of Moldova
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MDG
+  alpha2: MG
+  country_name: MADAGASCAR
+  nationality: MALAGASY
+  kind: state
+  aliases:
+  - MG
+  - Republic of Madagascar
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MDV
+  alpha2: MV
+  country_name: MALDIVES
+  nationality: MALDIVIAN
+  kind: state
+  aliases:
+  - MV
+  - Republic of Maldives
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MEX
+  alpha2: MX
+  country_name: MEXICO
+  nationality: MEXICAN
+  kind: state
+  aliases:
+  - MX
+  - United Mexican States
+  - Mexicana
+  - Mexicano
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MHL
+  alpha2: MH
+  country_name: MARSHALL ISLANDS
+  nationality: MARSHALLESE
+  kind: state
+  aliases:
+  - MH
+  - Republic of the Marshall Islands
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MKD
+  alpha2: MK
+  country_name: NORTH MACEDONIA
+  nationality: MACEDONIAN
+  kind: state
+  aliases:
+  - MK
+  - Republic of North Macedonia
+  - Macedonia
+  - FYROM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MLI
+  alpha2: ML
+  country_name: MALI
+  nationality: MALIAN
+  kind: state
+  aliases:
+  - ML
+  - Republic of Mali
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MLT
+  alpha2: MT
+  country_name: MALTA
+  nationality: MALTESE
+  kind: state
+  aliases:
+  - MT
+  - Republic of Malta
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MMR
+  alpha2: MM
+  country_name: MYANMAR
+  nationality: MYANMAR
+  kind: state
+  aliases:
+  - MM
+  - Republic of Myanmar
+  - Burma
+  - Burmese
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MNE
+  alpha2: ME
+  country_name: MONTENEGRO
+  nationality: MONTENEGRIN
+  kind: state
+  aliases:
+  - ME
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MNG
+  alpha2: MN
+  country_name: MONGOLIA
+  nationality: MONGOLIAN
+  kind: state
+  aliases:
+  - MN
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MNP
+  alpha2: MP
+  country_name: NORTHERN MARIANA ISLANDS
+  nationality: NORTHERN MARIANA ISLANDER
+  kind: state
+  aliases:
+  - MP
+  - Commonwealth of the Northern Mariana Islands
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MOZ
+  alpha2: MZ
+  country_name: MOZAMBIQUE
+  nationality: MOZAMBICAN
+  kind: state
+  aliases:
+  - MZ
+  - Republic of Mozambique
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MRT
+  alpha2: MR
+  country_name: MAURITANIA
+  nationality: MAURITANIAN
+  kind: state
+  aliases:
+  - MR
+  - Islamic Republic of Mauritania
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MSR
+  alpha2: MS
+  country_name: MONTSERRAT
+  nationality: ''
+  kind: state
+  aliases:
+  - MS
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MTQ
+  alpha2: MQ
+  country_name: MARTINIQUE
+  nationality: ''
+  kind: state
+  aliases:
+  - MQ
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MUS
+  alpha2: MU
+  country_name: MAURITIUS
+  nationality: MAURITIAN
+  kind: state
+  aliases:
+  - MU
+  - Republic of Mauritius
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MWI
+  alpha2: MW
+  country_name: MALAWI
+  nationality: MALAWIAN
+  kind: state
+  aliases:
+  - MW
+  - Republic of Malawi
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MYS
+  alpha2: MY
+  country_name: MALAYSIA
+  nationality: MALAYSIAN
+  kind: state
+  aliases:
+  - MY
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: MYT
+  alpha2: YT
+  country_name: MAYOTTE
+  nationality: ''
+  kind: state
+  aliases:
+  - YT
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NAM
+  alpha2: NA
+  country_name: NAMIBIA
+  nationality: NAMIBIAN
+  kind: state
+  aliases:
+  - NA
+  - Republic of Namibia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NCL
+  alpha2: NC
+  country_name: NEW CALEDONIA
+  nationality: NEW CALEDONIAN
+  kind: state
+  aliases:
+  - NC
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NER
+  alpha2: NE
+  country_name: NIGER
+  nationality: NIGERIEN
+  kind: state
+  aliases:
+  - NE
+  - Republic of the Niger
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NFK
+  alpha2: NF
+  country_name: NORFOLK ISLAND
+  nationality: NORFOLK ISLANDER
+  kind: state
+  aliases:
+  - NF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NGA
+  alpha2: NG
+  country_name: NIGERIA
+  nationality: NIGERIAN
+  kind: state
+  aliases:
+  - NG
+  - Federal Republic of Nigeria
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NIC
+  alpha2: NI
+  country_name: NICARAGUA
+  nationality: NICARAGUAN
+  kind: state
+  aliases:
+  - NI
+  - Republic of Nicaragua
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NIU
+  alpha2: NU
+  country_name: NIUE
+  nationality: NIUEAN
+  kind: state
+  aliases:
+  - NU
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NLD
+  alpha2: NL
+  country_name: NETHERLANDS
+  nationality: DUTCH
+  kind: state
+  aliases:
+  - NL
+  - Kingdom of the Netherlands
+  - Holland
+  - The Netherlands
+  - Nederlandse
+  - Nederlander
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NOR
+  alpha2: 'NO'
+  country_name: NORWAY
+  nationality: NORWEGIAN
+  kind: state
+  aliases:
+  - 'NO'
+  - Kingdom of Norway
+  - Norge
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NPL
+  alpha2: NP
+  country_name: NEPAL
+  nationality: NEPALI
+  kind: state
+  aliases:
+  - NP
+  - Federal Democratic Republic of Nepal
+  - Nepalese
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NRU
+  alpha2: NR
+  country_name: NAURU
+  nationality: NAURUAN
+  kind: state
+  aliases:
+  - NR
+  - Republic of Nauru
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: NZL
+  alpha2: NZ
+  country_name: NEW ZEALAND
+  nationality: NEW ZEALANDER
+  kind: state
+  aliases:
+  - NZ
+  - Kiwi
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: OMN
+  alpha2: OM
+  country_name: OMAN
+  nationality: OMANI
+  kind: state
+  aliases:
+  - OM
+  - Sultanate of Oman
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PAK
+  alpha2: PK
+  country_name: PAKISTAN
+  nationality: PAKISTANI
+  kind: state
+  aliases:
+  - PK
+  - Islamic Republic of Pakistan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PAN
+  alpha2: PA
+  country_name: PANAMA
+  nationality: PANAMANIAN
+  kind: state
+  aliases:
+  - PA
+  - Republic of Panama
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PCN
+  alpha2: PN
+  country_name: PITCAIRN
+  nationality: PITCAIRN
+  kind: state
+  aliases:
+  - PN
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PER
+  alpha2: PE
+  country_name: PERU
+  nationality: PERUVIAN
+  kind: state
+  aliases:
+  - PE
+  - Republic of Peru
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PHL
+  alpha2: PH
+  country_name: PHILIPPINES
+  nationality: FILIPINO
+  kind: state
+  aliases:
+  - PH
+  - Republic of the Philippines
+  - Filipina
+  - The Philippines
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PLW
+  alpha2: PW
+  country_name: PALAU
+  nationality: PALAUAN
+  kind: state
+  aliases:
+  - PW
+  - Republic of Palau
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PNG
+  alpha2: PG
+  country_name: PAPUA NEW GUINEA
+  nationality: PAPUA NEW GUINEAN
+  kind: state
+  aliases:
+  - PG
+  - Independent State of Papua New Guinea
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: POL
+  alpha2: PL
+  country_name: POLAND
+  nationality: POLISH
+  kind: state
+  aliases:
+  - PL
+  - Republic of Poland
+  - Polska
+  - Pole
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PRI
+  alpha2: PR
+  country_name: PUERTO RICO
+  nationality: PUERTO RICAN
+  kind: state
+  aliases:
+  - PR
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PRK
+  alpha2: KP
+  country_name: NORTH KOREA
+  nationality: NORTH KOREAN
+  kind: state
+  aliases:
+  - KP
+  - Democratic People's Republic of Korea
+  - Korea, Democratic People's Republic of
+  - DPRK
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PRT
+  alpha2: PT
+  country_name: PORTUGAL
+  nationality: PORTUGUESE
+  kind: state
+  aliases:
+  - PT
+  - Portuguese Republic
+  - Portuguesa
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PRY
+  alpha2: PY
+  country_name: PARAGUAY
+  nationality: PARAGUAYAN
+  kind: state
+  aliases:
+  - PY
+  - Republic of Paraguay
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PSE
+  alpha2: PS
+  country_name: PALESTINE
+  nationality: PALESTINIAN
+  kind: state
+  aliases:
+  - PS
+  - the State of Palestine
+  - State of Palestine
+  - West Bank
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: PYF
+  alpha2: PF
+  country_name: FRENCH POLYNESIA
+  nationality: FRENCH POLYNESIAN
+  kind: state
+  aliases:
+  - PF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: QAT
+  alpha2: QA
+  country_name: QATAR
+  nationality: QATARI
+  kind: state
+  aliases:
+  - QA
+  - State of Qatar
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: REU
+  alpha2: RE
+  country_name: RÉUNION
+  nationality: ''
+  kind: state
+  aliases:
+  - RE
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ROU
+  alpha2: RO
+  country_name: ROMANIA
+  nationality: ROMANIAN
+  kind: state
+  aliases:
+  - RO
+  - Rumania
+  - ROM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: RUS
+  alpha2: RU
+  country_name: RUSSIA
+  nationality: RUSSIAN
+  kind: state
+  aliases:
+  - RU
+  - Russian Federation
+  - RF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: RWA
+  alpha2: RW
+  country_name: RWANDA
+  nationality: RWANDAN
+  kind: state
+  aliases:
+  - RW
+  - Rwandese Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SAU
+  alpha2: SA
+  country_name: SAUDI ARABIA
+  nationality: SAUDI
+  kind: state
+  aliases:
+  - SA
+  - Kingdom of Saudi Arabia
+  - KSA
+  - Saudi Arabian
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SDN
+  alpha2: SD
+  country_name: SUDAN
+  nationality: SUDANESE
+  kind: state
+  aliases:
+  - SD
+  - Republic of the Sudan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SEN
+  alpha2: SN
+  country_name: SENEGAL
+  nationality: SENEGALESE
+  kind: state
+  aliases:
+  - SN
+  - Republic of Senegal
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SGP
+  alpha2: SG
+  country_name: SINGAPORE
+  nationality: SINGAPOREAN
+  kind: state
+  aliases:
+  - SG
+  - Republic of Singapore
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SGS
+  alpha2: GS
+  country_name: SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS
+  nationality: SOUTH GEORGIAN
+  kind: state
+  aliases:
+  - GS
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SHN
+  alpha2: SH
+  country_name: SAINT HELENA, ASCENSION AND TRISTAN DA CUNHA
+  nationality: SAINT HELENIAN
+  kind: state
+  aliases:
+  - SH
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SJM
+  alpha2: SJ
+  country_name: SVALBARD AND JAN MAYEN
+  nationality: ''
+  kind: state
+  aliases:
+  - SJ
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SLB
+  alpha2: SB
+  country_name: SOLOMON ISLANDS
+  nationality: SOLOMON ISLANDER
+  kind: state
+  aliases:
+  - SB
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SLE
+  alpha2: SL
+  country_name: SIERRA LEONE
+  nationality: SIERRA LEONEAN
+  kind: state
+  aliases:
+  - SL
+  - Republic of Sierra Leone
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SLV
+  alpha2: SV
+  country_name: EL SALVADOR
+  nationality: SALVADORAN
+  kind: state
+  aliases:
+  - SV
+  - Republic of El Salvador
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SMR
+  alpha2: SM
+  country_name: SAN MARINO
+  nationality: SAMMARINESE
+  kind: state
+  aliases:
+  - SM
+  - Republic of San Marino
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SOM
+  alpha2: SO
+  country_name: SOMALIA
+  nationality: SOMALI
+  kind: state
+  aliases:
+  - SO
+  - Federal Republic of Somalia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SPM
+  alpha2: PM
+  country_name: SAINT PIERRE AND MIQUELON
+  nationality: SAINT-PIERRAIS
+  kind: state
+  aliases:
+  - PM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SRB
+  alpha2: RS
+  country_name: SERBIA
+  nationality: SERBIAN
+  kind: state
+  aliases:
+  - RS
+  - Republic of Serbia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SSD
+  alpha2: SS
+  country_name: SOUTH SUDAN
+  nationality: SOUTH SUDANESE
+  kind: state
+  aliases:
+  - SS
+  - Republic of South Sudan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: STP
+  alpha2: ST
+  country_name: SAO TOME AND PRINCIPE
+  nationality: SANTOMEAN
+  kind: state
+  aliases:
+  - ST
+  - Democratic Republic of Sao Tome and Principe
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SUR
+  alpha2: SR
+  country_name: SURINAME
+  nationality: SURINAMESE
+  kind: state
+  aliases:
+  - SR
+  - Republic of Suriname
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SVK
+  alpha2: SK
+  country_name: SLOVAKIA
+  nationality: SLOVAK
+  kind: state
+  aliases:
+  - SK
+  - Slovak Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SVN
+  alpha2: SI
+  country_name: SLOVENIA
+  nationality: SLOVENIAN
+  kind: state
+  aliases:
+  - SI
+  - Republic of Slovenia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SWE
+  alpha2: SE
+  country_name: SWEDEN
+  nationality: SWEDISH
+  kind: state
+  aliases:
+  - SE
+  - Kingdom of Sweden
+  - Sverige
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SWZ
+  alpha2: SZ
+  country_name: ESWATINI
+  nationality: SWAZI
+  kind: state
+  aliases:
+  - SZ
+  - Kingdom of Eswatini
+  - Swaziland
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SXM
+  alpha2: SX
+  country_name: SINT MAARTEN (DUTCH PART)
+  nationality: SINT MAARTEN
+  kind: state
+  aliases:
+  - SX
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SYC
+  alpha2: SC
+  country_name: SEYCHELLES
+  nationality: SEYCHELLOIS
+  kind: state
+  aliases:
+  - SC
+  - Republic of Seychelles
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: SYR
+  alpha2: SY
+  country_name: SYRIA
+  nationality: SYRIAN
+  kind: state
+  aliases:
+  - SY
+  - Syrian Arab Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TCA
+  alpha2: TC
+  country_name: TURKS AND CAICOS ISLANDS
+  nationality: ''
+  kind: state
+  aliases:
+  - TC
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TCD
+  alpha2: TD
+  country_name: CHAD
+  nationality: CHADIAN
+  kind: state
+  aliases:
+  - TD
+  - Republic of Chad
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TGO
+  alpha2: TG
+  country_name: TOGO
+  nationality: TOGOLESE
+  kind: state
+  aliases:
+  - TG
+  - Togolese Republic
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: THA
+  alpha2: TH
+  country_name: THAILAND
+  nationality: THAI
+  kind: state
+  aliases:
+  - TH
+  - Kingdom of Thailand
+  - Siam
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TJK
+  alpha2: TJ
+  country_name: TAJIKISTAN
+  nationality: TAJIK
+  kind: state
+  aliases:
+  - TJ
+  - Republic of Tajikistan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TKL
+  alpha2: TK
+  country_name: TOKELAU
+  nationality: TOKELAUAN
+  kind: state
+  aliases:
+  - TK
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TKM
+  alpha2: TM
+  country_name: TURKMENISTAN
+  nationality: TURKMEN
+  kind: state
+  aliases:
+  - TM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TLS
+  alpha2: TL
+  country_name: TIMOR-LESTE
+  nationality: TIMORESE
+  kind: state
+  aliases:
+  - TL
+  - Democratic Republic of Timor-Leste
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TON
+  alpha2: TO
+  country_name: TONGA
+  nationality: TONGAN
+  kind: state
+  aliases:
+  - TO
+  - Kingdom of Tonga
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TTO
+  alpha2: TT
+  country_name: TRINIDAD AND TOBAGO
+  nationality: TRINIDADIAN
+  kind: state
+  aliases:
+  - TT
+  - Republic of Trinidad and Tobago
+  - Tobagonian
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TUN
+  alpha2: TN
+  country_name: TUNISIA
+  nationality: TUNISIAN
+  kind: state
+  aliases:
+  - TN
+  - Republic of Tunisia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TUR
+  alpha2: TR
+  country_name: TÜRKIYE
+  nationality: TURKISH
+  kind: state
+  aliases:
+  - TR
+  - Republic of Türkiye
+  - Turkey
+  - Turkiye
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TUV
+  alpha2: TV
+  country_name: TUVALU
+  nationality: TUVALUAN
+  kind: state
+  aliases:
+  - TV
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TWN
+  alpha2: TW
+  country_name: TAIWAN
+  nationality: TAIWANESE
+  kind: state
+  aliases:
+  - TW
+  - Chinese Taipei
+  - Taiwan, Province of China
+  - ROC
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: TZA
+  alpha2: TZ
+  country_name: TANZANIA
+  nationality: TANZANIAN
+  kind: state
+  aliases:
+  - TZ
+  - United Republic of Tanzania
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: UGA
+  alpha2: UG
+  country_name: UGANDA
+  nationality: UGANDAN
+  kind: state
+  aliases:
+  - UG
+  - Republic of Uganda
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: UKR
+  alpha2: UA
+  country_name: UKRAINE
+  nationality: UKRAINIAN
+  kind: state
+  aliases:
+  - UA
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: UMI
+  alpha2: UM
+  country_name: UNITED STATES MINOR OUTLYING ISLANDS
+  nationality: U.S. MINOR OUTLYING ISLANDS
+  kind: state
+  aliases:
+  - UM
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: URY
+  alpha2: UY
+  country_name: URUGUAY
+  nationality: URUGUAYAN
+  kind: state
+  aliases:
+  - UY
+  - Eastern Republic of Uruguay
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: USA
+  alpha2: US
+  country_name: UNITED STATES
+  nationality: AMERICAN
+  kind: state
+  aliases:
+  - US
+  - United States of America
+  - USA
+  - U.S.A.
+  - U.S.
+  - America
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: UZB
+  alpha2: UZ
+  country_name: UZBEKISTAN
+  nationality: UZBEK
+  kind: state
+  aliases:
+  - UZ
+  - Republic of Uzbekistan
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: VAT
+  alpha2: VA
+  country_name: HOLY SEE (VATICAN CITY STATE)
+  nationality: VATICAN
+  kind: state
+  aliases:
+  - VA
+  - Holy See
+  - Vatican City
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: VCT
+  alpha2: VC
+  country_name: SAINT VINCENT AND THE GRENADINES
+  nationality: VINCENTIAN
+  kind: state
+  aliases:
+  - VC
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: VEN
+  alpha2: VE
+  country_name: VENEZUELA
+  nationality: VENEZUELAN
+  kind: state
+  aliases:
+  - VE
+  - Bolivarian Republic of Venezuela
+  - Venezuela (Bolivarian Republic of)
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: VGB
+  alpha2: VG
+  country_name: VIRGIN ISLANDS, BRITISH
+  nationality: ''
+  kind: state
+  aliases:
+  - VG
+  - British Virgin Islands
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: VIR
+  alpha2: VI
+  country_name: VIRGIN ISLANDS, U.S.
+  nationality: U.S. VIRGIN ISLANDER
+  kind: state
+  aliases:
+  - VI
+  - Virgin Islands of the United States
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: VNM
+  alpha2: VN
+  country_name: VIETNAM
+  nationality: VIETNAMESE
+  kind: state
+  aliases:
+  - VN
+  - Socialist Republic of Viet Nam
+  - Viet Nam
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: VUT
+  alpha2: VU
+  country_name: VANUATU
+  nationality: NI-VANUATU
+  kind: state
+  aliases:
+  - VU
+  - Republic of Vanuatu
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: WLF
+  alpha2: WF
+  country_name: WALLIS AND FUTUNA
+  nationality: WALLISIAN
+  kind: state
+  aliases:
+  - WF
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: WSM
+  alpha2: WS
+  country_name: SAMOA
+  nationality: SAMOAN
+  kind: state
+  aliases:
+  - WS
+  - Independent State of Samoa
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: YEM
+  alpha2: YE
+  country_name: YEMEN
+  nationality: YEMENI
+  kind: state
+  aliases:
+  - YE
+  - Republic of Yemen
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ZAF
+  alpha2: ZA
+  country_name: SOUTH AFRICA
+  nationality: SOUTH AFRICAN
+  kind: state
+  aliases:
+  - ZA
+  - Republic of South Africa
+  - RSA
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ZMB
+  alpha2: ZM
+  country_name: ZAMBIA
+  nationality: ZAMBIAN
+  kind: state
+  aliases:
+  - ZM
+  - Republic of Zambia
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: ZWE
+  alpha2: ZW
+  country_name: ZIMBABWE
+  nationality: ZIMBABWEAN
+  kind: state
+  aliases:
+  - ZW
+  - Republic of Zimbabwe
+  source: ISO 3166-1 / ICAO Doc 9303 Part 3; PRADO issuing-state codes
+- code: UTO
+  alpha2: ''
+  country_name: UTOPIA (FICTIONAL ICAO TEST COUNTRY)
+  nationality: UTOPIAN
+  kind: test
+  aliases:
+  - Utopia
+  source: ICAO Doc 9303 test MRZ
+- code: GBD
+  alpha2: ''
+  country_name: UNITED KINGDOM
+  nationality: BRITISH OVERSEAS TERRITORIES CITIZEN
+  kind: nationality_status
+  aliases:
+  - BOTC
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: GBN
+  alpha2: ''
+  country_name: UNITED KINGDOM
+  nationality: BRITISH NATIONAL (OVERSEAS)
+  kind: nationality_status
+  aliases:
+  - BN(O)
+  - BNO
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: GBO
+  alpha2: ''
+  country_name: UNITED KINGDOM
+  nationality: BRITISH OVERSEAS CITIZEN
+  kind: nationality_status
+  aliases:
+  - BOC
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: GBP
+  alpha2: ''
+  country_name: UNITED KINGDOM
+  nationality: BRITISH PROTECTED PERSON
+  kind: nationality_status
+  aliases:
+  - BPP
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: GBS
+  alpha2: ''
+  country_name: UNITED KINGDOM
+  nationality: BRITISH SUBJECT
+  kind: nationality_status
+  aliases: []
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: EUE
+  alpha2: ''
+  country_name: EUROPEAN UNION
+  nationality: EU CITIZEN
+  kind: organization
+  aliases:
+  - EU
+  - European Union
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: UNO
+  alpha2: ''
+  country_name: UNITED NATIONS
+  nationality: UN OFFICIAL
+  kind: organization
+  aliases:
+  - UN
+  - United Nations Organization
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: UNA
+  alpha2: ''
+  country_name: UNITED NATIONS
+  nationality: UN SPECIALIZED AGENCY
+  kind: organization
+  aliases: []
+  source: ICAO Doc 9303 Part 3 exceptional code
+- code: UNK
+  alpha2: XK
+  country_name: KOSOVO
+  nationality: KOSOVAR
+  kind: state
+  aliases:
+  - XKX
+  - RKS
+  - Republic of Kosovo
+  source: ICAO Doc 9303 Part 3 exceptional code (UNMIK); PRADO specimens use UNK/RKS
+- code: XXA
+  alpha2: ''
+  country_name: ''
+  nationality: STATELESS
+  kind: status
+  aliases:
+  - stateless person
+  source: ICAO Doc 9303 Part 3 (1954 Convention)
+- code: XXB
+  alpha2: ''
+  country_name: ''
+  nationality: REFUGEE
+  kind: status
+  aliases:
+  - Convention refugee
+  source: ICAO Doc 9303 Part 3 (1951 Convention)
+- code: XXC
+  alpha2: ''
+  country_name: ''
+  nationality: REFUGEE (NON-CONVENTION)
+  kind: status
+  aliases: []
+  source: ICAO Doc 9303 Part 3
+- code: XXX
+  alpha2: ''
+  country_name: ''
+  nationality: UNSPECIFIED
+  kind: status
+  aliases:
+  - unknown nationality
+  source: ICAO Doc 9303 Part 3

@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────
+# ID Document Extraction API
+# Confirmed for: HP ZBook Firefly 15 G8 | 32GB RAM | Ubuntu Linux
+# Multi-channel pipeline ported from ID-Document-Extractor (Gemini -> Ollama,
+# see idx/pipeline.py + idx/vision_ollama.py). Ollama models used by the
+# AI-vision tier (crewai_pipeline.py):
+#   moondream:latest 1.7GB  (fast pre-scanner)
+#   qwen2.5vl:7b     6.0GB  (field extractor + layout analyzer, also the
+#                            single-shot model for crosscheck/universal calls)
+#   llava:13b        8.0GB  (accuracy verifier)
+# ─────────────────────────────────────────────────────────────
+
+# API Framework
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+python-multipart==0.0.32
+pydantic==2.12.5
+
+# Ollama Python client
+ollama==0.6.2
+
+# Outbound webhook delivery (see webhook.py)
+httpx==0.28.1
+
+# Utilities
+python-dotenv==1.2.3
+
+# ─────────────────────────────────────────────────────────────
+# idx/ — deterministic extraction channels (barcode/MRZ/OCR/ontology)
+# ─────────────────────────────────────────────────────────────
+opencv-python-headless==5.0.0.93   # preprocess.py: rectify/deskew/CLAHE
+numpy                               # image arrays
+pillow                              # image I/O
+PyYAML==6.0.3                       # ontology/*.yaml, concepts/*.yaml
+rapidocr-onnxruntime==1.4.4         # ocr_engine.py primary OCR (ONNX, CPU-only)
+pytesseract==0.3.13                 # ocr_engine.py fallback/vote — needs system
+                                     # tesseract binary (brew install tesseract / apt install tesseract-ocr)
+zxing-cpp==3.1.1                    # barcode.py: PDF417/QR/Code128 decode
+
+# ─────────────────────────────────────────────────────────────
+# Development — tests/ (python -m pytest tests/ -q)
+# ─────────────────────────────────────────────────────────────
+pytest

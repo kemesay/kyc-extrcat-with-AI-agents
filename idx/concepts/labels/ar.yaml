@@ -1,0 +1,5 @@
+# Arabic label aliases -- see en.yaml's header for sourcing discipline.
+# Supplied directly by the user this session, not independently re-verified
+# against a published standard.
+date_of_birth:
+  - تاريخ الميلاد

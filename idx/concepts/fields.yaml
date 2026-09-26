@@ -1,0 +1,27 @@
+# Canonical field concepts this project's label ontology covers -- see
+# docs/FIELD_ONTOLOGY.md. Each name here must match one of
+# ExtractedIDDocument's own field names (idx/schema.py), the shared
+# vocabulary every document family's builder maps onto.
+#
+# This is the CURRENT set generic_ocr.py's label-alias sweep covers --
+# not the full ~40-concept target docs/GLOBAL_COVERAGE.md describes.
+# Extend this list only alongside a real label alias for the new field
+# (see labels/*.yaml's own header) -- a field with no known label anywhere
+# is dead weight here.
+fields:
+  - surname
+  - given_names
+  - full_name
+  - date_of_birth
+  - date_of_issue
+  - date_of_expiry
+  - document_number
+  - sex
+  - nationality
+  - place_of_birth
+  - license_class
+  - license_restrictions
+  - license_endorsements
+  - phone_number
+  - personal_number
+  - permit_type

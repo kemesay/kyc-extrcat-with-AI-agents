@@ -1,0 +1,7 @@
+# German label aliases -- see en.yaml's header for sourcing discipline.
+surname:
+  - nachname
+given_names:
+  - vorname
+date_of_birth:
+  - geburtsdatum

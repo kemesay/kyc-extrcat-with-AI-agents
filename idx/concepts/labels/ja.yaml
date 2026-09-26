@@ -1,0 +1,11 @@
+# Japanese label aliases -- see en.yaml's header for sourcing discipline.
+# The user's message grouped this alongside a Chinese date_of_birth alias
+# without distinguishing the two languages; 生年月日 is specifically
+# Japanese (Chinese uses 出生日期, see zh.yaml), so it's placed here
+# rather than merged into zh.yaml.
+date_of_birth:
+  - 生年月日
+surname:
+  - 姓
+given_names:
+  - 名

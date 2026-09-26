@@ -1,0 +1,58 @@
+# Document-type vocabulary — keyword evidence for classification when
+# no MRZ/barcode already decided the family. Language-agnostic in the
+# sense that many cards print an English (or ICAO) phrase next to the
+# local-language title; both forms are listed when confirmed on a
+# real specimen. Order in generic_ocr.guess_document_category is
+# passport → drivers_license → residence_permit → national_id so a
+# licence that also says "card" is not classified as a national ID.
+
+categories:
+  passport:
+    keywords:
+      - Passport
+      - Passport No
+      - PASSPORT
+      - ፓስፖርት
+      - P<
+  drivers_license:
+    keywords:
+      - Driver's Licence
+      - Driver's License
+      - Drivers License
+      - Drivers Licence
+      - Driving Licence
+      - Driving License
+      - Driver License
+      - Ethiopian Driving License
+      - Permis de conduire
+      - PROVISIONAL DRIVING LICENCE
+      - DRIVER LICENCE
+      - DRIVER LICENSE
+      - የአሽከርካሪ ብቃት ማረጋገጫ ፈቃድ
+  residence_permit:
+    keywords:
+      - Residence Permit
+      - Resident Permit
+      - Residency Permit
+      - Verblijfstitel
+      - VERBLIJFSTITEL
+  national_id:
+    keywords:
+      - Identity Card
+      - Identification Card
+      - National ID
+      - National Identity
+      - CARTA DI IDENTITÀ
+      - IDENTITY CARD
+      - NEDERLANDSE IDENTITEITSKAART
+      - Identiteitskaart
+      - CARTE D'IDENTITÉ
+      - NATIONELLT IDENTITETSKORT
+      - IDENTITETSKORT
+      - PERSONALAUSWEIS
+      - CARTA DI IDENTITÀ / IDENTITY CARD
+      - Resident Identity Card
+      - Ethiopian Digital ID Card
+      - የኢትዮጵያ ዲጂታል መታወቂያ ካርድ
+      - ብሔራዊ መታወቂያ
+      - IDENTIFICATION CARD
