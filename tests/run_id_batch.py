@@ -1,7 +1,7 @@
 """
 Batch-run the universal engine over a folder of ID images.
 
-    python tests/run_id_batch.py <image_dir> <output_dir> [--mode fast|full] [--passes auto|1|2|3]
+    python tests/run_id_batch.py <image_dir> <output_dir> [--mode full|fast] [--passes auto|1|2|3]
                                  [--only name1,name2]
 
 Writes one <image>.json per unique image (duplicates by content hash are
@@ -34,7 +34,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("image_dir")
     ap.add_argument("output_dir")
-    ap.add_argument("--mode", default="fast", choices=["fast", "full"])
+    ap.add_argument("--mode", default="full", choices=["fast", "full"])
     ap.add_argument("--passes", default="auto")
     ap.add_argument("--only", default="", help="comma-separated file names to run")
     args = ap.parse_args()

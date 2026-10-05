@@ -11,6 +11,14 @@ engine end-to-end without real personal data:
   td1_id_front.png /   ICAO 9303 Part 5 TD1 identity-card specimen, data on the
   td1_id_back.png      front and the 3x30 MRZ on the back
   td2_permit.png       ICAO 9303 Part 6 TD2 specimen, 2x36 MRZ on the front
+  eth_employee_id.png  trilingual (Amharic / Afaan Oromo / English) work ID of a
+                       fictional bank: title, position, department, employee
+                       number, issue and expiry dates — and NO birth date
+  eth_bank_card_front.png /  portrait bank staff card in the layout of an
+  eth_bank_card_back.png     Ethiopian bank's: name in English / Amharic / Oromo
+                       spellings, stacked trilingual labels, Ethiopian-calendar
+                       dates marked "E.C", the "bearer ... is an employee of our
+                       Bank" statement (fictional bank, person and numbers)
 
 Usage: python tests/make_specimens.py [output_dir]   (default tests/fixtures)
 """
@@ -110,6 +118,85 @@ def china_resident(out: Path):
     img.save(out / "chn_resident_id.png")
 
 
+def employee_card(out: Path):
+    img, d = card(color=(240, 247, 242))
+    d.text((400, 28), "የምሳሌ ኅብረት ሥራ ባንክ", font=font(ETHIOPIC, 34), fill=(10, 70, 120))
+    d.text((400, 74), "Baankii Hojii Gamtaa Fakkeenyaa  |  EXAMPLE COOPERATIVE BANK S.C.",
+           font=font(LATIN_BOLD, 26), fill=(10, 70, 120))
+    d.text((400, 118), "የሰራተኛ መታወቂያ", font=font(ETHIOPIC, 28), fill=(160, 40, 30))
+    d.text((640, 120), "/ Kaardii Eenyummaa Hojjetaa / EMPLOYEE ID CARD", font=font(LATIN_BOLD, 26),
+           fill=(160, 40, 30))
+    rows = [("ስም", "Maqaa / Name", "ABEBE KEBEDE TESFAYE"),
+            ("የሥራ መደብ", "Gahee Hojii / Position", "Senior Customer Service Officer"),
+            ("ክፍል", "Kutaa / Department", "Credit Operations"),
+            ("ቅርንጫፍ", "Damee / Branch", "Example Branch"),
+            ("የሰራተኛ ቁጥር", "Lakk. Hojjetaa / Employee No.", "EMP-004217"),
+            ("የተሰጠበት ቀን", "Guyyaa Kenname / Date Issued", "15/03/2024"),
+            ("የሚያበቃበት ቀን", "Guyyaa Itti Dhumu / Expiry Date", "14/03/2027")]
+    y = 200
+    for amharic, latin, value in rows:
+        d.text((400, y), amharic + " /", font=font(ETHIOPIC, 22), fill=(80, 80, 90))
+        d.text((400, y + 30), latin, font=font(LATIN, 22), fill=(80, 80, 90))
+        d.text((830, y + 12), value, font=font(LATIN_BOLD, 30), fill=(10, 10, 10))
+        y += 82
+    d.text((60, 600), "አበበ ከበደ ተስፋዬ", font=font(ETHIOPIC, 30), fill=(10, 10, 10))
+    d.text((60, 800), "ፊርማ / Mallattoo / Signature: ____________", font=font(ETHIOPIC, 20), fill=(80, 80, 90))
+    img.save(out / "eth_employee_id.png")
+
+
+def bank_staff_card(out: Path):
+    W, H = 640, 1010
+    blue, dark = (70, 160, 230), (30, 20, 35)
+    lat = lambda size, bold=False: font(LATIN_BOLD if bold else LATIN, size)
+    eth = lambda size: font(ETHIOPIC, size)
+
+    def centred(d, y, text, f, fill=(0, 0, 0)):
+        w = d.textlength(text, font=f)
+        d.text(((W - w) / 2, y), text, font=f, fill=fill)
+
+    front = Image.new("RGB", (W, H), (250, 250, 252))
+    d = ImageDraw.Draw(front)
+    d.rectangle([0, 0, W, 150], fill=dark)
+    centred(d, 30, "EXAMPLE", lat(64, True), blue)
+    centred(d, 104, "Cooperative Bank", lat(28, True), blue)
+    d.text((330, 200), "ID NO-", font=lat(26), fill=(0, 0, 0))
+    d.text((440, 196), "10000042", font=lat(32, True), fill=(0, 0, 0))
+    d.rectangle([200, 290, 440, 620], fill=(215, 215, 222))
+    centred(d, 700, "Abebe Kebede Tesfaye", lat(32, True))
+    centred(d, 748, "አበበ ከበደ ተስፋዬ", eth(30))
+    centred(d, 796, "Abeebee Kabbadaa Tasfaayee", lat(32, True))
+    d.rectangle([0, 880, W, H], fill=(140, 200, 240))
+    d.text((150, 905), "+251 11 000 0000", font=lat(26, True), fill=(0, 0, 0))
+    d.text((150, 950), "www.example-bank.test", font=lat(24), fill=(0, 0, 0))
+    front.save(out / "eth_bank_card_front.png")
+
+    back = Image.new("RGB", (W, H), (250, 250, 252))
+    d = ImageDraw.Draw(back)
+    d.rectangle([0, 0, W, 150], fill=dark)
+    d.text((20, 40), "EXAMPLE", font=lat(44, True), fill=blue)
+    d.text((250, 40), "Baankii Hojii Gamtaa Fakkeenyaa", font=lat(22, True), fill=blue)
+    d.text((250, 80), "የምሳሌ ኅብረት ሥራ ባንክ", font=eth(22), fill=blue)
+    rows = [(190, ("Guyyaa itti kenname", "የተሰጠበት ቀን", "Date Issued"), "25/10/2016 E.C"),
+            (300, ("Guyyaa Tajaajilaa itti Xummuramu", "አገልግሎቱ የሚያበቃበት ቀን", "Expiry Date"), "24/10/2021 E.C")]
+    for top, (oromo, amharic, english), value in rows:
+        d.text((40, top), oromo, font=lat(22), fill=(0, 0, 0))
+        d.text((40, top + 32), amharic, font=eth(22), fill=(0, 0, 0))
+        d.text((40, top + 64), english, font=lat(22), fill=(0, 0, 0))
+        d.text((420, top + 30), value, font=lat(26, True), fill=(0, 0, 0))
+    for i, (text, f) in enumerate([("Abbaan Waraqaa eenyummaa kanaa hojjetaa", lat(22)),
+                                   ("baankii keenyaa ta'uu ni mirkaneessina", lat(22)),
+                                   ("የዚህ መታወቂያ ባለቤት የባንካችን", eth(22)),
+                                   ("ባልደረባ መሆናቸውን እናረጋግጣለን።", eth(22)),
+                                   ("The bearer of this ID card is", lat(22)),
+                                   ("an employee of our Bank.", lat(22))]):
+        centred(d, 440 + i * 34, text, f)
+    d.text((30, 690), "Mallattoo Abbaa Taayitaa", font=lat(20), fill=(0, 0, 0))
+    d.text((30, 718), "Authorized Signature", font=lat(20), fill=(0, 0, 0))
+    d.text((360, 690), "Signature of Holder", font=lat(20), fill=(0, 0, 0))
+    d.rectangle([0, 900, W, H], fill=(140, 200, 240))
+    back.save(out / "eth_bank_card_back.png")
+
+
 def _labelled(d, x, y, label, value, size=28):
     d.text((x, y), label, font=font(LATIN, 19), fill=(90, 90, 110))
     d.text((x, y + 22), value, font=font(LATIN_BOLD, size), fill=(10, 10, 10))
@@ -164,4 +251,6 @@ if __name__ == "__main__":
     china_resident(target)
     td1_card(target)
     td2_card(target)
+    employee_card(target)
+    bank_staff_card(target)
     print(f"specimens written to {target}")

@@ -38,6 +38,13 @@ pytesseract==0.3.13                 # ocr_engine.py fallback/vote — needs syst
 zxing-cpp==3.1.1                    # barcode.py: PDF417/QR/Code128 decode
 
 # ─────────────────────────────────────────────────────────────
+# universal/ serving — optional: only for UNIVERSAL_QUEUE_URL / UNIVERSAL_SIGNALS_URL
+# = postgresql://... (multi-node queue, pgvector image-hash search). The default
+# SQLite backend needs nothing extra.
+# ─────────────────────────────────────────────────────────────
+psycopg[binary]==3.3.6
+
+# ─────────────────────────────────────────────────────────────
 # Development — tests/ (python -m pytest tests/ -q)
 # ─────────────────────────────────────────────────────────────
 pytest

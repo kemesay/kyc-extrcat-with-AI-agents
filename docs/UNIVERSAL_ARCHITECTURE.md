@@ -11,6 +11,10 @@ how the engine gets full use out of small-context models.
 > document number). So the models transcribe and propose, and deterministic code
 > interprets and verifies against evidence that doesn't come from a language
 > model: check digits, barcodes, OCR, calendar arithmetic.
+>
+> Two corollaries came from testing on real cards: **only what is printed counts**
+> (no nationality, country or name is inferred), and **the card's own labels
+> decide which field a value is**, in whatever language they are printed.
 
 Contents:
 
@@ -21,6 +25,10 @@ Contents:
 5. [Evidence precedence: who wins a disagreement](#5-evidence-precedence-who-wins-a-disagreement)
 6. [From raw readings to name parts](#6-from-raw-readings-to-name-parts)
 7. [Reading the result](#7-reading-the-result)
+8. [Serving at high traffic](#8-serving-at-high-traffic)
+9. [Printed labels in every language](#9-printed-labels-in-every-language)
+10. [Printed only: how invented values are stopped](#10-printed-only-how-invented-values-are-stopped)
+11. [Dates in two calendars](#11-dates-in-two-calendars)
 
 ---
 
@@ -36,7 +44,7 @@ flowchart TD
 
     IMG --> OCR
     subgraph OCR["② Early OCR — runs IN PARALLEL with the agents (CPU)"]
-        R1["RapidOCR"]
+        R1["RapidOCR text + boxes"]
         T1["tesseract (eng)"]
     end
 
@@ -46,7 +54,10 @@ flowchart TD
     end
 
     AG --> CON["④ Consensus<br/>majority · specialist · script rule<br/>supervisor pick only if an agent produced it"]
-    CON --> INT["⑤ Interpretation of the transcriber's raw text — see §3<br/>names · dates · document number · sex · native-script name"]
+    INT["⑤ Interpretation of the transcriber's raw text — see §3<br/>names · dates · document number · sex · native-script name"]
+    OCR --> CARD
+    CON --> CARD["④b The card's own evidence — see §9, §10<br/>country it names · title it prints<br/>value beside each label (layout boxes, ~40 languages)"]
+    CARD --> INT
     OCR --> INT
     INT --> VER
 
@@ -55,7 +66,8 @@ flowchart TD
         V2 --> V3["OCR grounding (tesseract in the document's script)"]
         V3 --> V4["National-ID checksums & encoded birth date / sex"]
         V4 --> V5["Names: parts · order · Latin-primary · Ge'ez ↔ Latin check"]
-        V5 --> V6["Calendars · plausibility · expiry"]
+        V5 --> V6["Printed-only rules · calendars · plausibility · expiry"]
+        V6 --> V7["Identity signals (review flags only)"]
     end
 
     OCR --> VER
@@ -66,12 +78,7 @@ flowchart TD
     style INT fill:#fff7e6,stroke:#d49a1a
 ```
 
-**Two modes.** Both run steps ①, ②, ④, ⑤ and ⑥ in full:
-
-| Mode | Agents run | Typical time |
-|---|---|---|
-| `fast` | field_extractor + transcriber | ≈ 15–30 s |
-| `full` | all six (the five from the prompts file + the transcriber) | ≈ 90–120 s |
+**One mode by policy.** `full` runs all six agents (the five from the prompts file plus the transcriber) and every step above, in ≈ 90–150 s on the 24 GB Mac. `fast` (extractor + transcriber only) exists but returns 400 unless the server sets `UNIVERSAL_ALLOW_FAST_MODE=1`: quality comes first.
 
 ---
 
@@ -282,6 +289,16 @@ With the current prompts, `auto` makes one fully packed call per agent:
 
 Forcing 2 or 3 passes is still available for longer custom prompts.
 
+**When an estimate is still wrong.** The bytes-per-token ratio is calibrated on a sample that fits the model's own window, and an implausible ratio is rejected. If Ollama nevertheless refuses a call as too large, its error reports the true size; the engine scales that model's estimates, re-plans and retries once:
+
+```mermaid
+flowchart LR
+    CALL["Packed call"] --> OL{"Ollama"}
+    OL -- "ok" --> DONE["Answer"]
+    OL -- "exceeds context:<br/>n_prompt_tokens = 3035" --> LEARN["Scale this model's estimates<br/>by actual / planned"]
+    LEARN --> REPLAN["Re-plan with the corrected budget"] --> CALL2["Retry once"] --> DONE
+```
+
 **Other measures that keep the budgets real:**
 
 - **Context sizes are fixed.** Probes and real calls use the same context size, because Ollama reloads a model whenever the size changes.
@@ -298,9 +315,10 @@ flowchart TB
     L1["🥇 Barcode / QR — error-corrected by the symbology"]
     L2["🥈 MRZ check digits · national-ID checksums<br/>per field: only what a check digit protects"]
     L3["🥉 Physical label evidence in OCR<br/>'1DOE' · 'ROE,' · calendar pairs · format templates"]
+    L3B["The card's printed labels, title and named country<br/>value beside its label · 'Nationality: Ethiopian'"]
     L4["Transcriber's raw text, interpreted by rule"]
     L5["Agent consensus (vision models) — max confidence 0.85"]
-    L1 --> L2 --> L3 --> L4 --> L5
+    L1 --> L2 --> L3 --> L3B --> L4 --> L5
     L5 -. "a lower level never silently overwrites a higher one;<br/>a disagreement on a critical field → human_review_required" .-> L1
 
     style L1 fill:#e8f5e9,stroke:#2e7d32
@@ -314,6 +332,7 @@ flowchart TB
 
 - **MRZ names.** The MRZ's name line has no check digit. The MRZ decides which words are the surname, but it never replaces the visual spelling. When the two OCR engines read the name line differently, a local OCR re-read with per-character voting settles it.
 - **MRZ read from OCR.** The MRZ is found straight from the OCR text of every image, including a card's back, without waiting for an agent to transcribe it. Lines from the two OCR engines are combined by role, and the check digits pick the combination that is right.
+- **Not printed, not reported.** Whatever the level, a value with no printed or machine evidence is not invented: it is left empty, or the field goes to review with every reading listed (§10, §11).
 - **Rejected values are kept.** Every rejected value stays in `alternatives`, so no correction is silent.
 
 ---
@@ -365,3 +384,195 @@ Document-level keys:
 - **`human_review_required`** always comes with plain-language `review_reasons`.
 - **`timings_seconds`** breaks each run down by stage.
 - **The agent log** shows the number of passes, the knowledge coverage, and planned vs. actual tokens for every call.
+
+---
+
+## 8. Serving at high traffic
+
+**Quality first, speed second:** every document gets the full agent team (5 agents plus the transcriber), the same models and prompts, full-resolution images and the whole verification layer. Speed comes from the architecture around the model calls: no job is lost, no call waits for a model to load, the GPU never sits idle while a CPU stage runs, and more GPUs can be added. Removing agents is never how it gets faster.
+
+### 8.1 The path of one request
+
+```mermaid
+flowchart TD
+    C["Client: remittance, CRM,<br/>account opening, KYC portal"] -->|"POST /universal/extract<br/>priority: live / online / batch / bulk"| API
+
+    subgraph API["API node (FastAPI)"]
+        V["Validate type and size"] --> Q1["Capture check, milliseconds<br/>blur, exposure, contrast, glare, resolution"]
+        Q1 -->|"poor and reject_poor_capture"| R422["422: please retake the photo"]
+        Q1 --> H["SHA-256 of the exact bytes + options"]
+        H -->|"identical job still running"| JOIN["Join that job<br/>(double tap / client retry)"]
+        H --> SUB["Submit"]
+    end
+
+    SUB --> QUEUE[("Durable priority queue<br/>SQLite or PostgreSQL<br/>images stored with the job")]
+    QUEUE -->|"claim, lease, heartbeat"| W
+
+    subgraph W["Worker (in the API or python -m universal.worker)"]
+        E["extract_universal():<br/>full agent team + verification"] --> S["Identity signals<br/>(review flags only)"]
+        S --> M["Metrics"]
+    end
+
+    E <-->|"one call per host at a time"| POOL["Inference host pool"]
+    POOL --> G1["GPU host 1"]
+    POOL --> G2["GPU host 2 ..."]
+    S <--> SIG[("Signals store<br/>HMAC digests + perceptual hashes<br/>pgvector HNSW")]
+    W -->|"result (images deleted)"| QUEUE
+    QUEUE -->|"GET /status or webhook"| C
+```
+
+A worker that dies mid-document loses nothing. Its lease runs out and another worker claims the job, with its images still inside the queue.
+
+### 8.2 Priority tiers without starvation
+
+Each job's place in the queue is its submit time plus its tier's offset:
+
+| Tier | Offset | Used for |
+|---|---|---|
+| `live` | 0 | customer at the counter or in the app |
+| `online` | 10 min | portal KYC submissions |
+| `batch` | 1 h | compliance re-verification |
+| `bulk` | 6 h | historical backfill |
+
+A live request always goes first. A bulk job still runs within 6 hours of submission, even under constant live traffic. A duplicate submission joins at the higher of the two tiers.
+
+### 8.3 How many documents in flight
+
+The quality rule is **one model call per inference host at a time**. How many documents to run at once follows from it and was measured, not assumed. On one 24 GB Mac with 31 IDs submitted together:
+
+| Workers | Throughput | Each document's time |
+|---|---|---|
+| 1 | ~110 s per document | ~110 s |
+| 2 | 108 s per document (**no gain**) | 173–261 s (**about 2× longer**) |
+
+The model calls are the bottleneck, and they still run one at a time. So a second document only waits for the first one's calls, and interleaving the two documents' calls forces *extra* model swaps. The default is therefore **one document per GPU host**, and more documents in flight come from more GPUs.
+
+With model routing (`UNIVERSAL_MODEL_HOSTS`), each model gets its own GPU, and documents move through the team like an assembly line:
+
+```mermaid
+flowchart LR
+    subgraph H1["GPU 1: moondream + qwen2.5vl"]
+        s1["scanner / extractor /<br/>transcriber / layout"]
+    end
+    subgraph H2["GPU 2: llava:13b"]
+        s2["accuracy verifier"]
+    end
+    subgraph H3["GPU 3: qwen2.5"]
+        s3["supervisor"]
+    end
+    D3["doc C"] --> s1
+    D2["doc B"] --> s2
+    D1["doc A"] --> s3
+```
+
+Documents A, B and C are all in progress, but each GPU still runs a single call. Each document gets exactly the same calls it would get alone.
+
+### 8.4 Identity-consistency signals: flags, never data
+
+```mermaid
+flowchart TD
+    R["Finished result"] --> K["HMAC(country + document number)<br/>HMAC(name + date of birth)<br/>64-bit perceptual hash per side"]
+    K --> Q{"Seen before?"}
+    Q -->|"same document number,<br/>different identity"| F1["human review:<br/>document number seen with a different identity"]
+    Q -->|"near-identical photo (≤ 6 bits),<br/>different identity"| F2["human review:<br/>image reused for a different identity"]
+    Q -->|"same identity"| I["info: resubmission /<br/>same person, other document"]
+    Q -->|"byte-identical file,<br/>read differently before"| SF["info: same file submitted before<br/>(never fraud)"]
+    Q -->|"nothing"| OK["no signal"]
+    K --> STORE[("stored as digests only")]
+```
+
+Similarity is used only to *ask a question*, never to *answer* one. Two people's cards of the same type look alike to any image-similarity measure, so a result is never reused or pre-filled from a "similar" document. On the ID regression set, the same photo re-encoded or resized differed by 0–2 bits, and the two closest *different* documents by 16.
+
+### 8.5 Deployment shapes
+
+| Shape | Queue / signals | Inference | Command |
+|---|---|---|---|
+| One machine (this Mac) | local PostgreSQL + pgvector (`python -m universal.localdb setup`) | local Ollama, 1 call at a time | `python main.py` |
+| One API + GPU servers | PostgreSQL + pgvector | `UNIVERSAL_OLLAMA_HOSTS=gpu1,gpu2,…` | API with `UNIVERSAL_INPROCESS_WORKERS=0`, `python -m universal.worker` next to it |
+| Assembly line | PostgreSQL + pgvector | `UNIVERSAL_MODEL_HOSTS` pins each model to its GPU | workers = one per GPU (the default) |
+
+A 24 GB Mac cannot keep the whole team resident: qwen2.5vl is 7.3 GB and llava 10.8 GB at their context sizes, against about 17.8 GB usable by Metal. So models swap during every document. Each call's `load_seconds` (in the agent log and in `universal_model_load_seconds`) shows the cost, and more GPU memory or a dedicated llava host removes it.
+
+---
+
+## 9. Printed labels in every language
+
+The models read a card well but assign its dates poorly. On a trilingual work ID, a model took the value beside "Date Issued" as the date of birth. So the card's own labels now decide, in whichever language they are printed.
+
+```mermaid
+flowchart TD
+    IMG["Card image"] --> R["RapidOCR boxes<br/>(background, while the agents run)"]
+    IMG --> T["Tesseract boxes for label scripts<br/>RapidOCR can't read (Ge'ez, Arabic...)"]
+    TR["Transcriber: dates_with_labels<br/>'Date Issued: 15/03/2024 | የተሰጠበት ቀን: ...'"] --> LEX
+    R --> PAIR["Pair each value with its label by position:<br/>same box → same row (left) → directly above"]
+    T --> PAIR
+    PAIR --> LEX["Label vocabulary, ~40 languages<br/>'Date Issued' = 'የተሰጠበት ቀን' = 'Guyyaa Kenname' → issue_date"]
+    LEX --> D{"Does the model's field<br/>match the label?"}
+    D -->|"yes"| OK["confirmed: verified_by printed_label"]
+    D -->|"no: model filed it under another field"| MOVE["moved to the labelled field<br/>(the model's reading kept as the value)"]
+    D -->|"agents' birth date is the labelled issue date"| CLEAR["birth date left empty:<br/>no birth date is printed"]
+    LEX --> TYPE["Printed title + work-card fields<br/>→ employee_id / student_id / ..."]
+    LEX --> LANG["Label languages + markers + scripts,<br/>+ every agent's vote → languages"]
+```
+
+| On the fictional trilingual work ID (`tests/fixtures/eth_employee_id.png`) | Found from the card |
+|---|---|
+| `15/03/2024` | issue date (beside "Date Issued") |
+| `14/03/2027` | expiry date (beside "የሚያበቃበት ቀን") |
+| Date of birth | none printed, so none reported and none required |
+| Document type | `employee_id` (title "EMPLOYEE ID CARD" plus 4 work-card fields) |
+| Position / Department / Branch / Employee No. | `Senior Customer Service Officer` / `Credit Operations` / `Example Branch` / `EMP-004217` |
+| Languages | Oromo, English and Amharic, each with its evidence |
+
+The label vocabulary now covers 36 fields in 41 languages, including address levels (region, sub-city / zone, woreda, kebele, house number), work and civic fields (employee / registration number, position, department, branch, occupation) and the **emergency contact** (name, address, phone), which is kept apart from the holder's fields. The layout reader handles labels stacked in three languages, several labels on one address line, tilted photos, bilingual labels (`Kutaa Magaalaa / ክፍለ ከተማ`), and a far box on the same row losing to the value directly below.
+
+---
+
+## 10. Printed only: how invented values are stopped
+
+On real cards the agents returned values that were not on the card at all: an Egyptian issuing country for an Oromia city card, "Djiboutian" for a card printing `Nationality: Ethiopian`, the card's **title** as the holder's name, a phone number as the personal number. Prompt rules alone did not stop this, so there are two layers.
+
+```mermaid
+flowchart TD
+    P["Prompt rule 11: PRINTED ONLY<br/>(all agents + supervisor)"] --> A["Agents' values"]
+    A --> C{"Printed or machine-verified?"}
+    C -- "the card labels a value" --> LAB["The labelled value wins<br/>nationality · name · region · blood group"]
+    C -- "the card names a country<br/>or uses its label languages" --> CTRY["That issuing country wins"]
+    C -- "a card title offered as a name" --> TITLE["Dropped (also when misspelled)<br/>→ review if no name is readable"]
+    C -- "a number beside a phone label" --> PH["Moved to additional_fields.phone"]
+    C -- "nothing printed supports it" --> DROP["Dropped, flag not_printed<br/>value kept in alternatives"]
+    C -- "OCR reads a near-identical number" --> REV["Kept, both readings in review_reasons<br/>a person decides"]
+```
+
+| Field | Evidence required |
+|---|---|
+| `nationality` | printed nationality value (any script, code, demonym) or MRZ |
+| `issuing_country` | the country the card names, or its label languages, over an agent's unsupported guess |
+| `full_name` | the value beside the name label; never a title |
+| `personal_number` | not a number printed beside a phone label |
+| `date_of_birth_orig` | only an original-calendar date that is printed |
+| `document_number` | OCR's near reading is shown to the reviewer, never swapped in |
+
+---
+
+## 11. Dates in two calendars
+
+Ethiopian cards often print each date twice — Ethiopian (day/month/year) and Gregorian (often month-first) — and OCR damages them by dropping characters. A date is decided only when the evidence is unambiguous; otherwise it goes to review.
+
+```mermaid
+flowchart TD
+    D["Printed date text<br/>(transcriber · labelled layout · OCR row)"] --> M{"Calendar mark printed?<br/>E.C · ዓ.ም · AH"}
+    M -- yes --> CONV["Convert by arithmetic<br/>several marked dates in one field → each placed"]
+    M -- no --> N{"Month names in two calendars?<br/>የካቲት 07, 1987 / FEB 14, 1995"}
+    N -- yes --> AGREE{"Halves agree by arithmetic?<br/>(a lost Ge'ez month: exactly one month fits)"}
+    AGREE -- yes --> OK["Gregorian date, verified_by calendar_pair"]
+    AGREE -- no --> REV1["Review: the calendars disagree"]
+    N -- no --> PAIR{"Damaged numeric pair on the row?<br/>15/41982 · 12/241989"}
+    PAIR -- "exactly one date: Ethiopian reading converts to it<br/>AND a Gregorian reading supports it" --> OK
+    PAIR -- no --> MARKED{"Card's other dates marked EC?"}
+    MARKED -- yes --> REV2["Review: no calendar mark —<br/>both readings listed, none chosen"]
+    MARKED -- no --> CONVENTION["Country date convention<br/>(day/month order settled by plausibility)"]
+```
+
+Then plausibility: a birth or issue date can't be in the future; when issue and expiry contradict, the **unprinted** one is dropped, never the printed one.
+

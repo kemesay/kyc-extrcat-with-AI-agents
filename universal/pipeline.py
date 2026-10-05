@@ -42,6 +42,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Optional, Union
 
+from . import understanding
 from .grounding import collect_evidence, early_ocr_text, ground_fields
 from .id_numbers import check_numbers, compact, mask_aadhaar, verhoeff_valid
 from .llm import clean_unicode, encode_image
@@ -71,6 +72,9 @@ MODES = ("full", "fast")
 # residence permits print it on the back, so a front-only image of one would
 # only waste a ~25 s local OCR search.
 _MRZ_DOC_TYPES = {"passport", "visa", "refugee_travel_document"}
+# Cards that never carry an MRZ: an agent's MRZ-looking text on one is invented,
+# not worth a ~100 s local MRZ re-read (MRZ lines in the OCR text are still checked).
+_NO_MRZ_TYPES = {"employee_id", "student_id", "voter_id", "health_insurance_card", "tax_id"}
 _QUALITY_LEVELS = ("Excellent", "Good", "Fair", "Poor")
 _SCANNER_QUALITY = {"clear": "Good", "blurry": "Fair", "partial": "Fair", "damaged": "Poor"}
 
@@ -263,7 +267,8 @@ def _find_mrz(outputs: dict[str, dict], fields: dict[str, FieldResult], image_pa
 
     doc_type = fields["document_type"].value or doc_type_hint
     agents_failed = not any(outputs.get(a) for a in VISION_AGENTS)
-    if local_search and (agents_saw_mrz or doc_type in _MRZ_DOC_TYPES or agents_failed):
+    if local_search and doc_type not in _NO_MRZ_TYPES and (agents_saw_mrz or doc_type in _MRZ_DOC_TYPES
+                                                            or agents_failed):
         formats = ("TD3", "TD1", "TD2") if doc_type in ("passport", "") else ("TD1", "TD2", "TD3")
         print(f"  🔍 re-reading MRZ with local OCR ({'/'.join(formats)})...")
         local = search_mrz_locally(image_paths, formats)
@@ -288,7 +293,9 @@ def _document_quality(outputs: dict[str, dict]) -> str:
 
 
 def _overall_confidence(fields: dict[str, FieldResult]) -> float:
-    required = ["full_name", "document_number", "date_of_birth"]
+    required = ["full_name", "document_number"]
+    if understanding.birth_date_expected(fields["document_type"].value) or fields["date_of_birth"].value:
+        required.append("date_of_birth")
     optional = [f for f in ("expiry_date", "nationality", "issuing_country") if fields[f].value]
     scores = [fields[f].confidence if fields[f].value else 0.0 for f in required + optional]
     return round(sum(scores) / len(scores), 3)
@@ -380,8 +387,12 @@ def extract_universal(
 
     with ThreadPoolExecutor(max_workers=1) as pool:
         rapid_future = pool.submit(early_ocr_text, image_paths) if ocr_grounding else None
+        # The card's layout (text boxes) for label-anchored reading — CPU, in the
+        # same background thread, so it costs no time while the agents run.
+        layout_future = pool.submit(understanding.layout_mod.rapid_lines, image_paths) if ocr_grounding else None
         outputs, agent_log = run_agents(image_paths, mode, doc_type_hint, barcode, agent_passes)
         rapid_text = rapid_future.result() if rapid_future else ""
+        rapid_boxes = layout_future.result() if layout_future else []
     lap("agents")  # RapidOCR runs concurrently inside this window
     vision_ok = [a for a in VISION_AGENTS if outputs.get(a)]
 
@@ -423,13 +434,28 @@ def extract_universal(
                                                     source=source, verified_by=[source])
             ctx.warn(f"issuing_country {ctx.country} recognised from the "
                      + ("document number's national format" if by_number else "printed header"))
+    # What the card says about itself: every value beside its printed label,
+    # in any language; the document type from the card's own title.
+    transcript = " | ".join(v for v in (outputs.get(TRANSCRIBER_AGENT) or {}).values() if v)
+    # The country the card itself names (or whose languages its labels are in) — before the
+    # label OCR languages are chosen from it.
+    verification["country"] = understanding.decide_country(fields, ctx, "\n".join([rapid_text, transcript]))
+    any_ethiopic = any(0x1200 <= ord(c) <= 0x137F for o in outputs.values() for v in o.values() for c in str(v))
+    label_script = "Ethiopic" if any_ethiopic else script_of_name(fields)
+    und = (understanding.read(image_paths, rapid_boxes, ctx.country, label_script)
+           if ocr_grounding else understanding.Understanding())
+    doc_type_report = understanding.decide_document_type(fields, [rapid_text, und.layout.text(), transcript],
+                                                         und, ctx)
+    lap("layout")
     verification["printed_text"] = {
         "names": resolve_names(fields, outputs, ctx, rapid_text),
         "local_name": resolve_local_name(fields, outputs, ctx),
-        "dates": resolve_dates(fields, outputs, ctx, rapid_text),
+        "dates": resolve_dates(fields, outputs, ctx, rapid_text, anchored=und.dates, row_tokens=und.date_rows),
         "sex": resolve_sex(fields, outputs),
         "document_number": resolve_document_number(fields, outputs, ctx, rapid_text),
     }
+    additional_fields = understanding.apply_values(fields, und, ctx)
+    verification["labels"] = {**und.report(), "document_type": doc_type_report}
 
     # Machine-verified sources, strongest first.
     if barcode is not None:
@@ -458,6 +484,16 @@ def extract_universal(
         evidence = collect_evidence(rapid_text, image_paths, ctx.country, script_of_name(fields))
         grounding = ground_fields(fields, evidence, ctx, len(vision_ok))
         verification["ocr_grounding"] = {**evidence.summary(), **grounding}
+        # Nothing the card doesn't print: an unprinted nationality, an invented Latin name.
+        verification["printed_only"] = understanding.require_printed(
+            fields, "\n".join([evidence.text, und.layout.text()]), und, ctx, evidence.substantial)
+        transcribed = outputs.get(TRANSCRIBER_AGENT) or {}
+        local_names = [fields["full_name_local"].value, *fields["full_name_local"].alternatives,
+                       transcribed.get("full_name_local_script", ""),
+                       " ".join(v for v in (transcribed.get("given_names_local_script", ""),
+                                            transcribed.get("surname_local_script", "")) if v)]
+        verification["spelling_by_script"] = understanding.arbitrate_spelling_by_script(fields, local_names, ctx)
+        understanding.drop_titles_as_names(fields, ctx)       # OCR arbitration can promote a misspelled title
         doc_no, personal = compact(fields["document_number"].value), compact(fields["personal_number"].value)
         if personal and personal == doc_no:
             fields["personal_number"] = FieldResult()  # same number reported twice
@@ -471,9 +507,14 @@ def extract_universal(
     given_names = settle_name_parts(fields, ctx)
     local_rejected = guard_local_script(fields, ctx)
     verification["cross_script"] = cross_script_check(fields, ctx)
+    # Languages: every agent's vote (the fast scanner's included) + what is printed.
+    language_texts = [rapid_text, und.layout.text(), transcript,
+                      fields["full_name_local"].value, fields["full_name"].value]
+    languages_found = understanding.decide_languages(fields, outputs, language_texts, ctx.country)
     local_rejected = local_rejected or any("dropped" in c for c in verification["cross_script"])
     _recheck_name_reviews(fields, ctx, rapid_text)
-    verification["dual_calendar"] = check_dual_calendar(fields, ctx)
+    verification["dual_calendar"] = check_dual_calendar(
+        fields, ctx, printed_text="\n".join([rapid_text, und.layout.text(), transcript]))
     verification["plausibility"] = check_plausibility(fields, ctx)
     lap("checks")
 
@@ -488,7 +529,11 @@ def extract_universal(
     if not vision_ok:
         ctx.warn("no AI agent produced a result — only machine-readable data (if any) is reported")
         ctx.review("all AI agents failed")
-    for name in ("full_name", "document_number", "date_of_birth"):
+    # A birth date is required on state identity documents, not on work / student cards.
+    required = ["full_name", "document_number"]
+    if understanding.birth_date_expected(fields["document_type"].value):
+        required.append("date_of_birth")
+    for name in required:
         if not fields[name].value:
             ctx.review(f"{name} could not be read")
 
@@ -498,13 +543,20 @@ def extract_universal(
 
     extracted = {name: fields[name].value for name in EXTRACTION_FIELDS}
     extracted["given_names"] = given_names
+    extracted["additional_fields"] = additional_fields
+    phone = (verification.get("printed_only") or {}).get("phone")
+    if phone and "phone" not in additional_fields:
+        additional_fields["phone"] = phone
     local = (verification.get("printed_text") or {}).get("local_name") or {}
     fixes = {c["from"]: c["to"] for c in verification.get("cross_script") or [] if "from" in c}
     respell = lambda v: " ".join(fixes.get(w, w) for w in v.split())
     extracted["surname_local"] = "" if local_rejected else respell(local.get("surname_local", ""))
     extracted["given_names_local"] = "" if local_rejected else respell(local.get("given_names_local", ""))
     # Label junk ('<NAME><NAME>', 'ERIKSSON NAME') is cleaned out of the printed-order name.
-    printed_name = normalize_value("full_name", fields["full_name"].original, Context())[0]
+    # The printed-order name is the agents' original reading — unless OCR replaced that reading.
+    name_source = fields["full_name"].value if fields["full_name"].source == "ocr_arbitration" \
+        else fields["full_name"].original
+    printed_name = normalize_value("full_name", name_source, Context())[0]
     code, surname = issuing_code or "", fields["last_name"].value.upper()
     words = printed_name.split()
     if code and words and surname and words[0].upper() in (code + surname, "P" + code + surname, "I" + code + surname):
@@ -530,6 +582,7 @@ def extract_universal(
         "review_reasons": ctx.review_reasons,
         "warnings": ctx.warnings,
         "verification": verification,
+        "languages": languages_found,
         "agents": agent_log,
         "critical_fields": list(CRITICAL_FIELDS),
         "total_duration_seconds": round(time.time() - started, 2),

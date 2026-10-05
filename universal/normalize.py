@@ -122,7 +122,10 @@ def split_bilingual_name(value: str) -> tuple[str, str]:
 
 
 def clean_name(value: str) -> str:
-    text = re.sub(r"[<>«»]+", " ", value or "")   # MRZ fillers (and OCR's '>' misread of them)
+    # No identity document prints square brackets in a name: '[a]HELFE',
+    # '[CHECKED] ...' are model annotations / placeholder echoes.
+    text = re.sub(r"\[[^\]]*\]|[\[\]]", " ", value or "")
+    text = re.sub(r"[<>«»]+", " ", text)          # MRZ fillers (and OCR's '>' misread of them)
     text = " ".join(text.split())
     return text.strip(" ,;")
 
@@ -135,11 +138,13 @@ _MALE = {
     "m", "male", "man", "masculin", "masculine", "masculino", "maschile", "männlich", "mannlich",
     "мужской", "муж", "м", "чоловіча", "erkek", "laki-laki", "laki laki", "lelaki", "nam",
     "ذكر", "مذكر", "مرد", "男", "남", "남자", "ወንድ", "पुरुष", "ชาย", "זכר", "άρρεν", "ανδρας",
+    "dhiira", "lab", "labood", "mume",                               # Oromo, Somali, Swahili
 }
 _FEMALE = {
     "f", "female", "woman", "féminin", "feminin", "feminine", "femenino", "feminino", "femminile",
     "weiblich", "женский", "жен", "ж", "жіноча", "kadın", "kadin", "perempuan", "wanita", "nữ", "nu",
     "أنثى", "انثى", "مؤنث", "زن", "女", "여", "여자", "ሴት", "महिला", "स्त्री", "หญิง", "נקבה", "θήλυ", "γυναικα",
+    "dhalaa", "dubartii", "dheddig", "mke",                        # Oromo, Somali, Swahili
 }
 _NONBINARY = {"x", "<", "other", "diverse", "divers", "unspecified", "non-binary", "nonbinary"}
 
@@ -174,6 +179,20 @@ def normalize_sex(value: str) -> tuple[str, set[str]]:
 
 _DOC_TYPE_RULES = (
     ("refugee_travel_document", ("refugee", "convention travel", "unhcr", "1951 convention")),
+    # Work / student / civic cards, before the generic "id card" of national_id.
+    ("work_permit", ("work permit", "employment pass", "permis de travail", "arbeitserlaubnis", "የሥራ ፈቃድ",
+                     "የስራ ፈቃድ")),
+    ("employee_id", ("employee", "staff id", "staff card", "work id", "work card", "service card", "company id",
+                     "corporate id", "personnel", "carte professionnelle", "dienstausweis", "mitarbeiterausweis",
+                     "tarjeta de empleado", "carnet de empleado", "crachá", "tessera aziendale", "工作证", "工作證",
+                     "员工证", "員工證", "社員証", "職員証", "사원증", "بطاقة موظف", "بطاقة عمل", "ሰራተኛ", "ሠራተኛ",
+                     "hojjetaa")),
+    ("student_id", ("student", "étudiant", "etudiant", "estudiante", "studente", "studentenausweis", "学生证",
+                    "學生證", "学生証", "학생증", "ተማሪ", "barataa")),
+    ("voter_id", ("voter", "electoral", "électeur", "elector", "የመራጭ")),
+    ("health_insurance_card", ("health insurance", "health card", "medicare", "carte vitale",
+                               "gesundheitskarte", "krankenversicherung")),
+    ("tax_id", ("taxpayer", "tax id", "tin card", "permanent account number")),
     ("residence_permit", ("residence", "resident permit", "residency", "iqama", "brp", "green card",
                           "permanent resident", "titre de séjour", "aufenthalt", "permesso di soggiorno",
                           "tarjeta de residencia", "إقامة", "اقامة")),
@@ -224,6 +243,9 @@ NATIVE_COUNTRY_NAMES = {
     "中華民國": "TWN", "中华民国": "TWN", "台灣": "TWN", "台湾": "TWN", "香港": "HKG", "澳門": "MAC", "澳门": "MAC",
     "日本": "JPN", "日本国": "JPN", "大韓民国": "KOR", "대한민국": "KOR", "한국": "KOR", "조선": "PRK",
     "ኢትዮጵያ": "ETH", "የኢትዮጵያ": "ETH", "ኢትዮጵያዊ": "ETH", "ኤርትራ": "ERI",
+    "ኢትዮጲያ": "ETH", "ኢትዮጲያዊ": "ETH", "ኢትዮጵያዊት": "ETH",           # common spellings
+    "itiyoophiyaa": "ETH", "itoophiyaa": "ETH", "itoophiyaa'i": "ETH",   # Afaan Oromo
+    "itoobiya": "ETH", "itoobiyaan": "ETH",                            # Somali
     "مصر": "EGY", "جمهورية مصر العربية": "EGY", "السعودية": "SAU", "المملكة العربية السعودية": "SAU",
     "الإمارات": "ARE", "الامارات": "ARE", "الإمارات العربية المتحدة": "ARE", "قطر": "QAT", "الكويت": "KWT",
     "البحرين": "BHR", "عمان": "OMN", "الأردن": "JOR", "العراق": "IRQ", "سوريا": "SYR", "لبنان": "LBN",
@@ -262,10 +284,32 @@ def _native_country(text: str) -> str:
     return ""
 
 
+# Models sometimes wrap a code or name: '[CA]', '(CAN)', '"Canada"'.
+_WRAPPING = " \t[](){}<>\"'`“”‘’"
+
+
+def _by_parts(value: str, resolve) -> tuple[str, str]:
+    """'CA[CANADA]', 'ETH / Ethiopia': every part that resolves must name the
+    same country, else nothing is guessed."""
+    parts = [p for p in re.split(r"[\[\](){}/|,;]+", value or "") if p.strip(_WRAPPING)]
+    if len(parts) < 2:
+        return "", ""
+    found = {r for r in (resolve(p) for p in parts) if r[0]}
+    return found.pop() if len({code for code, _ in found}) == 1 else ("", "")
+
+
 def resolve_country(value: str) -> tuple[str, str]:
     """Any code / name / demonym -> (ISO alpha-3, English name), or ('', '')
     when idx's ICAO/PRADO table can't place it."""
-    text = (value or "").strip()
+    text = (value or "").strip(_WRAPPING)
+    if not text:
+        return "", ""
+    whole = _resolve_country_whole(text)
+    return whole if whole[0] else _by_parts(text, _resolve_country_whole)
+
+
+def _resolve_country_whole(text: str) -> tuple[str, str]:
+    text = text.strip(_WRAPPING)
     if not text:
         return "", ""
     code, name = resolve_country_code(text)
@@ -283,7 +327,15 @@ def resolve_country(value: str) -> tuple[str, str]:
 
 def resolve_nationality(value: str) -> tuple[str, str]:
     """-> (ISO alpha-3, demonym) or ('', '')."""
-    text = (value or "").strip()
+    text = (value or "").strip(_WRAPPING)
+    if not text:
+        return "", ""
+    whole = _resolve_nationality_whole(text)
+    return whole if whole[0] else _by_parts(text, _resolve_nationality_whole)
+
+
+def _resolve_nationality_whole(text: str) -> tuple[str, str]:
+    text = text.strip(_WRAPPING)
     if not text:
         return "", ""
     code, demonym = resolve_nationality_code(text)

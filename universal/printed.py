@@ -444,23 +444,198 @@ def _roman_months(text: str) -> str:
     return re.sub(r"(\d{1,2}[./\- ])(XII|XI|IX|X|VIII|VII|VI|IV|V|III|II|I)([./\- ]\d{2,4})", repl, text)
 
 
-_DATE_LABELS = (("issue_date", r"issue|iss\b|delivr|emission|afgifte|ausstell|expedi"),
-                ("expiry_date", r"expir|exp\b|valid|scaden|geldig|gültig|venc"),
-                ("date_of_birth", r"birth|dob|naissance|nascita|geboorte|geburt|nacimiento"))
+_CALENDAR_MARKER = re.compile(r"E\.?\s?C\.?(?![A-Za-z])|ዓ\.?\s?ም|\bA\.?H\b|هـ|ه\.ش|\bSH\b", re.I)
 
 
-def _labelled_dates(other_numbers: str) -> dict[str, str]:
-    out = {}
-    for piece in re.split(r"\s*\|\s*", other_numbers or ""):
-        if ":" not in piece:
-            continue
-        label, value = piece.split(":", 1)
-        if not re.search(r"\d{1,4}[./\- ]\d{1,2}[./\- ]\d{1,4}", value):
-            continue
-        for field, pattern in _DATE_LABELS:
-            if re.search(pattern, label, re.I) and field not in out:
-                out[field] = value.strip()
-                break
+# ── dual-calendar dates written with month names ────────────────────────
+# "የካቲት 07, 1987 / FEB 14, 1995" (Ethiopian / Gregorian), "መጋቢት 10, 2018/Mar 192026"
+# (day and year printed glued), "07,1987/FEB 14,1995" (the Ge'ez month lost in
+# transcription). One date, two calendars: each half is read on its own and the
+# halves must agree by calendar arithmetic. Nothing is guessed: a half counts
+# only when it is a complete date, or when exactly one month makes a
+# month-less Ethiopian half convert to the complete Gregorian half.
+
+_LATIN_MONTHS = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9,
+                 "oct": 10, "okt": 10, "nov": 11, "dec": 12, "dez": 12}
+_LATIN_MONTH_RE = re.compile(r"(?<![A-Za-z])(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|okt|nov|dec|dez)[a-z]*\.?"
+                             r"[\s=:,\-]*(\d{1,2})(?:[\s.,]+|(?=(?:19|20)\d{2}))((?:19|20)\d{2})(?!\d)", re.I)
+_YEAR = re.compile(r"(?<!\d)((?:19|20)\d{2})(?!\d)")
+
+
+def _ethiopic_month(text: str) -> Optional[int]:
+    for token in re.findall(r"[\u1200-\u137F]+", text or ""):
+        m = cal.ETHIOPIAN_MONTH_LOOKUP.get(token)
+        if m:
+            return m
+    return None
+
+
+def _dual_half(text: str) -> dict:
+    """One half of a dual date -> {calendar, iso, day, year, complete}."""
+    m = _LATIN_MONTH_RE.search(text)
+    if m:
+        try:
+            iso = date(int(m.group(3)), _LATIN_MONTHS[m.group(1).lower()[:3]], int(m.group(2))).isoformat()
+            return {"calendar": "gregorian", "iso": iso, "complete": True, "text": m.group().strip()}
+        except ValueError:
+            return {"complete": False}
+    month = _ethiopic_month(text)
+    years = _YEAR.findall(text)
+    days = [int(d) for d in re.findall(r"(?<!\d)(\d{1,2})(?!\d)", _YEAR.sub(" ", text))]
+    if not years:
+        return {"complete": False}
+    year, day = int(years[-1]), (days[-1] if days else None)
+    if month and day:
+        try:
+            iso = cal.ethiopian_to_gregorian(year, month, day).isoformat()
+            return {"calendar": "ethiopian", "iso": iso, "complete": True, "day": day, "month": month,
+                    "year": year, "text": f"{day:02d}/{month:02d}/{year} EC"}
+        except ValueError:
+            return {"complete": False}
+    return {"complete": False, "day": day, "year": year}
+
+
+def interpret_dual_date(printed: str, country: str) -> Optional[dict]:
+    """-> {iso, verified, original, note} or None when the text is not a
+    month-name dual date (the numeric logic below handles those)."""
+    if not printed or not (_LATIN_MONTH_RE.search(printed) or _ethiopic_month(printed)):
+        return None
+    halves = [h for h in re.split(r"\s*[/|]\s*", printed) if _YEAR.search(h) or _LATIN_MONTH_RE.search(h)]
+    if len(halves) < 2:
+        whole = _dual_half(printed)
+        if whole.get("complete"):
+            return {"iso": whole["iso"], "verified": False, "original": whole["text"] if whole["calendar"] == "ethiopian"
+                    else "", "note": f"{whole['calendar']} date {whole['text']!r}"}
+        return None
+    parsed = [_dual_half(h) for h in halves[:2]]
+    greg = next((p for p in parsed if p.get("calendar") == "gregorian"), None)
+    eth = next((p for p in parsed if p.get("calendar") == "ethiopian"), None)
+    partial = next((p for p in parsed if not p.get("complete") and p.get("year")), None)
+    if greg and eth:
+        gap = abs((date.fromisoformat(greg["iso"]) - date.fromisoformat(eth["iso"])).days)
+        if gap <= 1:
+            return {"iso": greg["iso"], "verified": True, "original": eth["text"],
+                    "note": f"Ethiopian {eth['text']} = Gregorian {greg['text']} by calendar arithmetic"}
+        return {"iso": "", "verified": False, "original": eth["text"], "conflict": True,
+                "note": f"the two calendars disagree: {eth['text']} = {eth['iso']} but {greg['text']}"}
+    if greg and partial and partial.get("day") and country in ("ETH", "ERI", ""):
+        target = date.fromisoformat(greg["iso"])
+        months = [mo for mo in range(1, 14) if _ec_is(partial["year"], mo, partial["day"], target)]
+        if len(months) == 1:
+            original = f"{partial['day']:02d}/{months[0]:02d}/{partial['year']} EC"
+            return {"iso": greg["iso"], "verified": True, "original": original,
+                    "note": f"Ethiopian {original} (month read from the arithmetic) = Gregorian {greg['text']}"}
+    if greg:
+        return {"iso": greg["iso"], "verified": False, "original": "",
+                "note": f"Gregorian {greg['text']} (the other calendar's half is not a complete date)"}
+    if eth:
+        return {"iso": eth["iso"], "verified": False, "original": eth["text"],
+                "note": f"Ethiopian {eth['text']} converted by calendar arithmetic"}
+    return None
+
+
+# ── calendar-pair solver for OCR-damaged dual dates ─────────────────────
+# Ethiopian cards print each date twice (Ethiopian d/m/y, Gregorian — often
+# month-first). OCR and transcription damage them by DROPPING characters
+# ('12/3/1991' -> '12/31991', '7/29/2025' -> '7/292025'), rarely adding any. A
+# Gregorian date is accepted only when BOTH hold for the same date row:
+#   1. an Ethiopian reading on the row converts to it by calendar arithmetic
+#      (the reading's digits appear, in order, in that Ethiopian date), and
+#   2. a Gregorian reading on the row supports it directly (same year, its
+#      digits appear in order in one of the ways the date can be printed),
+# and exactly ONE date satisfies both. Otherwise nothing is decided here.
+
+def _subsequence(small: str, big: str) -> bool:
+    it = iter(big)
+    return all(c in it for c in small)
+
+
+def _gregorian_renderings(g: date) -> set[str]:
+    out = set()
+    for a, b in ((g.month, g.day), (g.day, g.month)):
+        for fa in ("{}", "{:02}"):
+            for fb in ("{}", "{:02}"):
+                out.add(fa.format(a) + fb.format(b) + str(g.year))
+    return out
+
+
+def _ethiopian_candidates(token: str) -> dict[date, str]:
+    digits = "".join(re.findall(r"\d", token or ""))
+    m = re.search(r"((?:19|20)\d\d)$", digits)
+    if not m or len(digits) < 5:
+        return {}
+    year, out = int(m.group(1)), {}
+    for month in range(1, 14):
+        for day in range(1, 31):
+            forms = (f"{day}{month}{year}", f"{day:02}{month:02}{year}", f"{day}{month:02}{year}",
+                     f"{day:02}{month}{year}")
+            if any(_subsequence(digits, f) for f in forms):
+                try:
+                    out.setdefault(cal.ethiopian_to_gregorian(year, month, day), f"{day:02}/{month:02}/{year} EC")
+                except ValueError:
+                    pass
+    return out
+
+
+def _supports(token: str, g: date) -> bool:
+    digits = "".join(re.findall(r"\d", token or ""))
+    return len(digits) >= 6 and str(g.year) in digits and any(
+        _subsequence(digits, r) for r in _gregorian_renderings(g))
+
+
+def solve_calendar_pair(tokens: list[str], agent_values: list[str]) -> Optional[tuple[str, str]]:
+    """-> (Gregorian ISO, Ethiopian original) when exactly one date is confirmed
+    by both calendars on the row, else None."""
+    ethiopian: dict[date, str] = {}
+    for t in tokens:
+        for g, orig in _ethiopian_candidates(t).items():
+            ethiopian.setdefault(g, orig)
+    agent_dates = set()
+    for v in agent_values:
+        try:
+            agent_dates.add(date.fromisoformat(v))
+        except (TypeError, ValueError):
+            pass
+    confirmed = [g for g in ethiopian if g in agent_dates or any(_supports(t, g) for t in tokens)]
+    if len(confirmed) != 1:
+        return None
+    return confirmed[0].isoformat(), ethiopian[confirmed[0]]
+
+
+def _ec_is(year: int, month: int, day: int, target: date) -> bool:
+    try:
+        return cal.ethiopian_to_gregorian(year, month, day) == target
+    except ValueError:
+        return False
+
+
+def _date_key(text: str) -> tuple:
+    """Identity of a printed date regardless of zero-padding and separators."""
+    return tuple(int(n) for n in re.findall(r"\d+", text or ""))
+
+
+def _readings(printed: str, country: str) -> set[str]:
+    """Every ISO date the printed text can mean (both day/month orders, and
+    the calendar conversion on documents printed in another calendar)."""
+    # The digits read naively too: a model that ignores "E.C" turns 25/10/2016 E.C into 2016-10-25.
+    core = _CALENDAR_MARKER.sub("", printed).strip()
+    out = {d.isoformat() for d in _numeric_readings(_roman_months(core))}
+    converted = _calendar_conversion(core, country)
+    if converted:
+        out.add(converted)
+    r = normalize_date(printed, country=country)
+    if r.iso:
+        out.add(r.iso)
+    return out
+
+
+def _label_evidence(outputs: dict[str, dict], anchored: list) -> list:
+    """Printed-label evidence for dates: the layout's anchored dates plus the
+    transcriber's own 'LABEL: date' lists, whose labels the lexicon maps."""
+    from .layout import transcribed_labelled_dates
+    out = list(anchored or [])
+    for key in ("dates_with_labels", "other_numbers_with_labels"):
+        out += transcribed_labelled_dates(_first(outputs, key))
     return out
 
 
@@ -484,22 +659,102 @@ def resolve_sex(fields: dict[str, FieldResult], outputs: dict[str, dict]) -> Opt
 
 
 def resolve_dates(fields: dict[str, FieldResult], outputs: dict[str, dict], ctx: Context,
-                  ocr_text: str = "") -> list[dict]:
+                  ocr_text: str = "", anchored: Optional[list] = None,
+                  row_tokens: Optional[dict[str, list[str]]] = None) -> list[dict]:
+    """The model reads the dates; the printed LABELS decide which field each
+    one is. A date the transcriber filed under one field but the card labels
+    as another ("Date Issued" filed as date of birth) moves to its labelled
+    field; the existing calendar / day-month logic then settles its value."""
     readings = ocr_date_readings(ocr_text)
     orphans: list[str] = []
     reports = []
-    labelled = _labelled_dates(_first(outputs, "other_numbers_with_labels"))
+    evidence = _label_evidence(outputs, anchored)
+    labelled: dict[str, list[str]] = {}
+    strong: dict[tuple, set] = {}
+    for a in evidence:
+        key = _date_key(a.value)
+        if not key:
+            continue
+        if a.value not in labelled.setdefault(a.field, []):
+            labelled[a.field].append(a.value)
+        # Only a label in the same box / on the same row, or the one the transcriber
+        # copied, may overrule the model; a label above a value only fills a gap.
+        if a.how in ("same_box", "same_row", "left_stack", "transcribed_label"):
+            strong.setdefault(key, set()).add(a.field)
+    # A date two strong sources label differently is ambiguous: nothing is moved.
+    label_of = {k: next(iter(f)) for k, f in strong.items() if len(f) == 1}
+    moved: dict[str, list[str]] = {}
     for name, key in (("date_of_birth", "date_of_birth_as_printed"), ("issue_date", "issue_date_as_printed"),
                       ("expiry_date", "expiry_date_as_printed")):
-        printed = _first(outputs, key)
-        if labelled.get(name) and labelled[name] not in printed:
-            # The other calendar's half, transcribed under "other numbers" ("Issue Date: 8/4/2025").
-            printed = f"{printed} | {labelled[name]}" if printed else labelled[name]
+        for part in [p for p in re.split(r"\s*\|\s*", _first(outputs, key)) if p.strip()]:
+            other = label_of.get(_date_key(part))
+            if other and other != name:
+                moved.setdefault(name, []).append(part)
+                reports.append({"field": name, "printed": part, "labelled_as": other, "moved_by_label": True})
+                ctx.warn(f"{name}: {part!r} is printed beside a {other.replace('_', ' ')} label — "
+                         f"not taken as the {name.replace('_', ' ')}")
+    # Dates the model placed (in any field): a label only fills a gap with a date
+    # nobody has placed, so one printed date never ends up in two fields.
+    placed = {_date_key(p) for k in ("date_of_birth_as_printed", "issue_date_as_printed", "expiry_date_as_printed")
+              for p in re.split(r"\s*\|\s*", _first(outputs, k)) if p.strip()}
+    solved: set[str] = set()
+    if ctx.country in ("ETH", "ERI") and row_tokens:
+        for name, key in (("date_of_birth", "date_of_birth_as_printed"), ("issue_date", "issue_date_as_printed"),
+                          ("expiry_date", "expiry_date_as_printed")):
+            tokens = list(row_tokens.get(name, [])) + [p for p in re.split(r"\s*\|\s*", _first(outputs, key)) if p]
+            agent_values = [o.get(name, "") for o in outputs.values()]
+            got = solve_calendar_pair(tokens, agent_values)
+            fr = fields[name]
+            if not got or _is_verified(fr):
+                continue
+            iso, orig = got
+            if fr.value != iso:
+                ctx.warn(f"{name}: {iso} — the Ethiopian {orig} and the Gregorian date printed on the same row "
+                         f"agree by calendar arithmetic" + (f" (agents had {fr.value})" if fr.value else ""))
+                fields[name] = FieldResult(value=iso, confidence=0.92, source="calendar_pair",
+                                           verified_by=["calendar_pair", "printed_text"],
+                                           alternatives=[v for v in [fr.value] + fr.alternatives if v and v != iso],
+                                           flags=["solved_from_calendar_pair"])
+            else:
+                fr.verified_by += ["calendar_pair", "printed_text"]
+                fr.confidence = max(fr.confidence, 0.92)
+            if name == "date_of_birth":
+                fields["date_of_birth_orig"] = FieldResult(value=orig, confidence=0.9, source="calendar_pair",
+                                                           verified_by=["calendar_pair"])
+            reports.append({"field": name, "resolved": iso, "ethiopian": orig, "solved_from_calendar_pair": True})
+            solved.add(name)
+    arrived: dict[str, list[str]] = {}
+    for name, parts in moved.items():
+        for part in parts:
+            arrived.setdefault(label_of[_date_key(part)], []).append(part)
+    for name, key in (("date_of_birth", "date_of_birth_as_printed"), ("issue_date", "issue_date_as_printed"),
+                      ("expiry_date", "expiry_date_as_printed")):
+        # The model's reading stays the value (OCR digits are the weaker read);
+        # a part it filed under the wrong field arrives here with its reading.
+        if name in solved:
+            continue
+        model_parts = [p for p in re.split(r"\s*\|\s*", _first(outputs, key))
+                       if p.strip() and p not in moved.get(name, [])] + arrived.get(name, [])
+        model_parts = list({_date_key(p) or p: p for p in model_parts}.values())
+        label_parts = [] if model_parts else [v for v in labelled.get(name, [])
+                                              if _date_key(v) not in placed][:2]
+        printed = " | ".join(model_parts + label_parts)
         if not printed:
             continue
         parts = [_roman_months(p) for p in re.split(r"\s*\|\s*", printed) if p.strip()]
         iso, note, pair_found = "", "", False
-        if len(parts) > 1:
+        dual = interpret_dual_date(printed, ctx.country)
+        if dual and dual.get("conflict"):
+            ctx.review(f"{name}: {dual['note']}")
+            reports.append({"field": name, "printed": printed, "conflict": dual["note"]})
+            continue
+        if dual:
+            iso, note, pair_found = dual["iso"], dual["note"], dual["verified"]
+            if name == "date_of_birth" and dual["original"]:
+                fields["date_of_birth_orig"] = FieldResult(value=dual["original"], confidence=0.9,
+                                                           source="printed_text",
+                                                           verified_by=["calendar_pair"] if pair_found else [])
+        if not iso and len(parts) > 1:
             pair = _resolve_pair(parts, ctx.country)
             if pair:
                 iso, note = pair[0], f"{pair[2]} pair {pair[1]!r}"
@@ -529,6 +784,20 @@ def resolve_dates(fields: dict[str, FieldResult], outputs: dict[str, dict], ctx:
         if not iso:
             for part in parts:
                 r = normalize_date(part, country=ctx.country, future_leaning=(name == "expiry_date"))
+                # A calendar the card NAMES ("25/10/2016 E.C", "ዓ.ም", "AH") is converted by
+                # arithmetic; an unmarked date is only read in the Gregorian family here.
+                marked = r.calendar in ("ethiopian", "hijri", "persian") and _CALENDAR_MARKER.search(part)
+                if marked and r.iso:
+                    iso, note = r.iso, f"{r.calendar} calendar date {part.strip()!r} (marked on the card)"
+                    if name == "date_of_birth" and not fields["date_of_birth_orig"].value:
+                        fields["date_of_birth_orig"] = FieldResult(value=part.strip(), confidence=0.9,
+                                                                   source="printed_text")
+                    # '30/01/2018 EC | 30/01/2021 EC' in one field: the other marked dates are other fields'.
+                    for extra in parts[parts.index(part) + 1:]:
+                        rx = normalize_date(extra, country=ctx.country)
+                        if rx.iso and rx.iso != iso and _CALENDAR_MARKER.search(extra):
+                            orphans.append(rx.iso)
+                    break
                 if r.iso and r.calendar in ("gregorian", "japanese", "minguo", "thai"):
                     iso, note = r.iso, "ambiguous day/month" if r.ambiguous else ""
                     if r.ambiguous and name != "expiry_date":
@@ -541,6 +810,8 @@ def resolve_dates(fields: dict[str, FieldResult], outputs: dict[str, dict], ctx:
             continue
         fr = fields[name]
         report = {"field": name, "printed": printed, "resolved": iso}
+        if labelled.get(name):
+            report["labelled"] = labelled[name]
         if fr.value == iso:
             fr.verified_by.append("printed_text")
             fr.confidence = max(fr.confidence, 0.8)
@@ -550,29 +821,117 @@ def resolve_dates(fields: dict[str, FieldResult], outputs: dict[str, dict], ctx:
             ctx.warn(f"{name}: printed {printed!r} is {iso} under the document's date convention"
                      + (f" ({note})" if note else "") + (f" — agents had {fr.value}" if fr.value else ""))
             _set(fr, iso, "printed_text", 0.8, "reinterpreted_from_printed")
-        if pair_found or (note and "confirmed by OCR" in note):
+        if pair_found or (note and ("confirmed by OCR" in note or "marked on the card" in note)):
             fr.verified_by.append("calendar_pair")   # day/month order settled by arithmetic
+        if labelled.get(name) and any(iso in _readings(v, ctx.country) for v in labelled[name]):
+            fr.verified_by.append("printed_label")
         reports.append(report)
-    _place_orphans(fields, orphans, ctx, reports)
+    _clear_mislabelled(fields, labelled, ctx, reports, label_of)
+    _place_orphans(fields, orphans, ctx, reports, readings)
+    _flag_unstated_calendar(fields, outputs, ctx, ocr_text, reports, solved, labelled)
     return reports
 
 
-def _place_orphans(fields: dict[str, FieldResult], orphans: list[str], ctx: Context, reports: list[dict]) -> None:
-    """An orphan date fills an EMPTY issue/expiry slot when plausibility allows
-    only that slot: issue is after birth and not in the future; expiry is after issue/birth."""
+def _gregorian_is(m: re.Match, iso: str) -> bool:
+    d, mo, y = (int(x) for x in m.groups())
+    return iso in {f"{y:04d}-{mo:02d}-{d:02d}", f"{y:04d}-{d:02d}-{mo:02d}"}
+
+
+def _flag_unstated_calendar(fields: dict[str, FieldResult], outputs: dict[str, dict], ctx: Context,
+                            ocr_text: str, reports: list[dict], solved: set,
+                            labelled: Optional[dict] = None) -> None:
+    """A date printed with NO calendar mark on a card whose other dates are marked
+    Ethiopian ('30/01/2018 EC') is ambiguous: '02/07/1988' is 1988-07-02 if
+    Gregorian but 1996-03-11 if Ethiopian. Neither is chosen — both go to review."""
+    if ctx.country not in ("ETH", "ERI"):
+        return
+    printed = {k: _first(outputs, f"{k}_as_printed") for k in ("date_of_birth", "issue_date", "expiry_date")}
+    all_text = " ".join([ocr_text or "", *printed.values(), _first(outputs, "dates_with_labels")])
+    if not re.search(r"\d{4}\s*(?:E\.?\s?C\.?(?![A-Za-z])|ዓ\.?\s?ም)", all_text, re.I):
+        return                                     # no date on this card is marked Ethiopian
+    fr = fields["date_of_birth"]
+    # The printed reading the date came from: the transcriber's, else the labelled layout's.
+    text = printed["date_of_birth"] or " | ".join((labelled or {}).get("date_of_birth", []))
+    if (not fr.value or "date_of_birth" in solved or _is_verified(fr) or "calendar_pair" in fr.verified_by
+            or not text or _ethiopic_month(text) or _LATIN_MONTH_RE.search(text)):
+        return
+    # The birth date's OWN reading: the transcriber may put the card's other (marked) dates in
+    # the same field ('02/07/1988 | 30/01/2018 EC | ...'), so the mark is checked on this date only.
+    m = next((x for x in re.finditer(r"(\d{1,2})[./\- ](\d{1,2})[./\- ](\d{4})", text)
+              if date(int(x.group(3)), 1, 1).isoformat()[:4] == fr.value[:4]
+              or _gregorian_is(x, fr.value)), None)
+    if not m or _CALENDAR_MARKER.match(text[m.end():].lstrip()):
+        return
+    d, mo, y = (int(x) for x in m.groups())
+    try:
+        as_ethiopian = cal.ethiopian_to_gregorian(y, mo, d).isoformat()
+    except ValueError:
+        return
+    gregorian = fr.value
+    ctx.review(f"date_of_birth: {text.strip()!r} carries no calendar mark while the card's other dates are "
+               f"Ethiopian — {fr.value} if Gregorian, {as_ethiopian} if Ethiopian")
+    fields["date_of_birth_orig"] = FieldResult(value=text.strip(), confidence=0.8, source="printed_text")
+    fields["date_of_birth"] = FieldResult(value="", confidence=0.0, source="printed_text",
+                                          alternatives=[fr.value, as_ethiopian] + fr.alternatives,
+                                          flags=["calendar_not_printed"])
+    reports.append({"field": "date_of_birth", "printed": text, "calendar": "not printed",
+                    "if_gregorian": gregorian,
+                    "if_ethiopian": as_ethiopian})
+
+
+def _clear_mislabelled(fields: dict[str, FieldResult], labelled: dict[str, list[str]], ctx: Context,
+                       reports: list[dict], label_of: Optional[dict] = None) -> None:
+    """An agents' date that the card labels as a DIFFERENT field, with no label
+    of its own supporting it, is not this field (the issue date offered as a
+    birth date on a work ID that prints no birth date)."""
+    for name in ("date_of_birth", "issue_date", "expiry_date"):
+        fr = fields[name]
+        if not fr.value or _is_verified(fr) or "printed_label" in fr.verified_by:
+            continue
+        own = any(fr.value in _readings(v, ctx.country) for v in labelled.get(name, []))
+        strong_values = [v for f, values in labelled.items() for v in values
+                         if f != name and (label_of or {}).get(_date_key(v)) == f]
+        other = next(((label_of or {})[_date_key(v)] for v in strong_values
+                      if fr.value in _readings(v, ctx.country)), None)
+        if own or not other:
+            continue
+        ctx.warn(f"{name}: {fr.value} is the date printed beside the {other.replace('_', ' ')} label — "
+                 f"no {name.replace('_', ' ')} is printed, so it is left empty")
+        fields[name] = FieldResult(value="", confidence=0.0, source="printed_labels",
+                                   alternatives=[fr.value] + fr.alternatives, flags=[f"labelled_as_{other}"])
+        reports.append({"field": name, "cleared": True, "labelled_as": other})
+
+
+def _place_orphans(fields: dict[str, FieldResult], orphans: list[str], ctx: Context, reports: list[dict],
+                   readings: Optional[set] = None) -> None:
+    """An orphan date (printed, transcribed next to another date) fills an issue/
+    expiry slot when plausibility allows only that slot: issue is after birth
+    and not in the future; expiry is after issue/birth. A slot counts as open
+    when empty, or when it holds an unverified agents' date no OCR reading has."""
     today = date.today().isoformat()
     dob = fields["date_of_birth"].value
+
+    def open_slot(name: str) -> bool:
+        fr = fields[name]
+        return not fr.value or (not _is_verified(fr) and not {"printed_text", "calendar_pair", "printed_label"}
+                                & set(fr.verified_by) and readings is not None and fr.value not in readings)
+
     for iso in orphans:
         if iso in (dob, fields["issue_date"].value, fields["expiry_date"].value):
             continue
         slot = ""
-        if not fields["issue_date"].value and (not dob or iso > dob) and iso <= today:
+        issue = fields["issue_date"].value
+        if open_slot("issue_date") and (not dob or iso > dob) and iso <= today:
             slot = "issue_date"
-        elif not fields["expiry_date"].value and iso > today and (not dob or iso > dob):
+        elif open_slot("expiry_date") and iso > today and (not dob or iso > dob) and \
+                (not issue or iso > issue or open_slot("issue_date")):
             slot = "expiry_date"
+        if slot and fields[slot].value:
+            ctx.warn(f"{slot}: {fields[slot].value} (agents) is not printed; the printed {iso} replaces it")
         if slot:
             fields[slot] = FieldResult(value=iso, confidence=0.65, source="printed_text",
-                                       flags=["placed_by_plausibility"])
+                                       flags=["placed_by_plausibility"],
+                                       alternatives=[v for v in [fields[slot].value] if v])
             ctx.warn(f"{slot}: {iso} was transcribed next to another date; placed by plausibility")
             reports.append({"field": slot, "resolved": iso, "placed_by_plausibility": True})
 

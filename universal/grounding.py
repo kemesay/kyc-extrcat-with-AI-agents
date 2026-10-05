@@ -324,7 +324,10 @@ def is_grounded(name: str, value: str, ev: OcrEvidence) -> Optional[bool]:
             return True   # OCR's 'CA123450A' is the printed 'CA12345OA'
         return False if ev.substantial else None
     if name == "blood_type":
-        found = re.search(rf"(?<![A-Z0-9]){re.escape(value.upper())}(?![A-Z0-9])", _fold(ev.text).upper())
+        # OCR glues the value to its label ('Blood GroupAB+VE'); '+' may be spaced.
+        text = re.sub(r"\s*([+\-])\s*", r"\1", _fold(ev.text).upper())
+        v = re.escape(re.sub(r"\s+", "", value.upper()))
+        found = re.search(rf"(?:(?<![A-Z0-9])|(?<=GROUP)|(?<=TYPE)){v}(?![A-Z0-9])", text)
         return True if found else (False if ev.substantial else None)
     if name in _TEXT_FIELDS:
         grounded = _text_grounded(value, ev)
@@ -482,7 +485,9 @@ def _script_arbitration(fr: FieldResult, name: str, ev: OcrEvidence, ctx: Contex
 def ground_fields(fields: dict[str, FieldResult], ev: OcrEvidence, ctx: Context, n_agents: int) -> dict:
     report: dict = {"grounded": [], "not_grounded": [], "calendar_corrections": [], "completions": [],
                     "arbitrated": [], "script_differences": []}
-    verified = {"barcode", "mrz"}
+    # Machine-read values, and values read beside the card's own printed label
+    # (already an OCR reading) are not re-spelled by OCR.
+    verified = {"barcode", "mrz", "printed_labels"}
 
     for name in DATE_FIELDS + ("document_number", "personal_number", "blood_type") + _TEXT_FIELDS:
         fr = fields[name]

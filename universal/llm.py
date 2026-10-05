@@ -1,9 +1,10 @@
 """
 Ollama calls for the universal engine.
 
-Shares the process-wide ollama_semaphore (ollama_concurrency.py) and the
-Vulkan/iGPU failure detection from ollama_client.py, so this engine and the
-existing idx pipeline never oversubscribe the GPU between them. Differs from
+Every call runs through universal.inference: one call per inference host at
+a time, models kept hot (keep_alive), and on the local host the process-wide
+ollama_semaphore shared with the existing idx pipeline, so the two engines
+never oversubscribe the GPU between them. Differs from
 ollama_client.vision_chat() in three ways that matter for a 37-field schema:
 
   - Structured output: every call passes a JSON schema as Ollama's `format`,
@@ -28,17 +29,20 @@ from typing import Any, Iterable, Optional
 import ollama
 from PIL import Image, ImageOps
 
-from ollama_concurrency import ollama_semaphore
 from validators import has_internal_repetition
 
+from . import inference
+
 MAX_IMAGE_SIDE = 1600
-# A request that outlives this is a stalled server (e.g. Ollama restarting),
-# not a slow model — fail fast rather than hang the job for minutes.
-REQUEST_TIMEOUT = float(os.environ.get("UNIVERSAL_OLLAMA_TIMEOUT", "240"))
-_client = ollama.Client(timeout=REQUEST_TIMEOUT)
 NUM_PREDICT = 1536        # a full 37-field reply is ~600-900 tokens; more means a loop
 TEMPERATURE = 0.1
 REPEAT_PENALTY = 1.15
+# Reproducibility (opt-in): with a fixed sampling seed the same document gives
+# the same reading on every run — auditable KYC results, and a quality gate that
+# compares like with like. Unset = Ollama's random seed (run-to-run variation;
+# measured on the ID regression set: 311-320 of 329 fields for unchanged code).
+_seed = os.environ.get("UNIVERSAL_SEED", "").strip()
+SEED: Optional[int] = int(_seed) if _seed.lstrip("-").isdigit() else None
 
 _PAIR_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*:\s*"((?:[^"\\]|\\.)*)"')
 
@@ -111,14 +115,15 @@ def _evaluated(response: Any) -> bool:
 DEVICE_FAILURE_MARKERS = ("errordevicelost", "device lost", "model runner has unexpectedly stopped")
 
 
-def _chat(model: str, messages: list, fmt: Any, options: dict, keep_alive: Any = None) -> Any:
-    extra = {"keep_alive": keep_alive} if keep_alive is not None else {}
+def _chat(model: str, messages: list, fmt: Any, options: dict, keep_alive: Any = None, client: Any = None) -> Any:
+    # A request timeout (UNIVERSAL_OLLAMA_TIMEOUT) marks a stalled server, not a slow model.
+    extra = {"keep_alive": inference.KEEP_ALIVE if keep_alive is None else keep_alive}
     try:
-        return _client.chat(model=model, messages=messages, format=fmt, options=options, **extra)
+        return client.chat(model=model, messages=messages, format=fmt, options=options, **extra)
     except ollama.ResponseError as e:
         # An Ollama server too old for JSON-schema `format` still honours "json".
         if isinstance(fmt, dict) and "format" in str(e).lower():
-            return _client.chat(model=model, messages=messages, format="json", options=options, **extra)
+            return client.chat(model=model, messages=messages, format="json", options=options, **extra)
         raise
 
 
@@ -141,13 +146,15 @@ def chat_json(
     messages = ([{"role": "system", "content": system}] if system else []) + [user_msg]
     options = {"num_ctx": num_ctx, "num_predict": num_predict, "temperature": TEMPERATURE,
                "repeat_penalty": REPEAT_PENALTY}
+    if SEED is not None:
+        options["seed"] = SEED
     fmt: Any = json_schema(fields) if fields else "json"
 
     retried_on_cpu = False
     resampled = False
-    with ollama_semaphore:
+    with inference.pool().slot(model) as (host, client):
         try:
-            response = _chat(model, messages, fmt, options)
+            response = _chat(model, messages, fmt, options, client=client)
         except Exception as e:
             text = str(e).lower()
             if "token repeat limit" in text:
@@ -157,13 +164,14 @@ def chat_json(
                 # every later call ~10x slower.)
                 print(f"  ⚠️  {model}: repetition loop — resampling with a stronger repeat penalty")
                 resampled = True
-                response = _chat(model, messages, fmt, {**options, "repeat_penalty": 1.35, "temperature": 0.4})
+                response = _chat(model, messages, fmt, {**options, "repeat_penalty": 1.35, "temperature": 0.4},
+                                 client=client)
             elif any(m in text for m in DEVICE_FAILURE_MARKERS):
                 print(f"  ⚠️  {model}: GPU device failure ({e}) — retrying once on CPU")
                 retried_on_cpu = True
                 # keep_alive=0 unloads the CPU-only runner right after, so the next
                 # call reloads the model onto the GPU instead of reusing it.
-                response = _chat(model, messages, fmt, {**options, "num_gpu": 0}, keep_alive=0)
+                response = _chat(model, messages, fmt, {**options, "num_gpu": 0}, keep_alive=0, client=client)
             else:
                 raise
 
@@ -172,8 +180,8 @@ def chat_json(
         # evaluated and no content. Retry once, then fail loudly — an empty
         # reply must never pass as "this document has no data".
         time.sleep(2)
-        with ollama_semaphore:
-            response = _chat(model, messages, fmt, options)
+        with inference.pool().slot(model) as (host, client):
+            response = _chat(model, messages, fmt, options, client=client)
         if not _evaluated(response):
             raise RuntimeError(f"{model}: Ollama returned an empty response (no prompt evaluated)")
 
@@ -184,7 +192,13 @@ def chat_json(
         data[k] = ""
     if fields:
         data = {f: data.get(f, "") for f in fields}
+    ns = lambda key: round((response.get(key) or 0) / 1e9, 2)
     meta = {
+        "host": host,
+        # Ollama's own clock: a non-zero load means the model was (re)loaded for this call.
+        "load_seconds": ns("load_duration"),
+        "prompt_eval_seconds": ns("prompt_eval_duration"),
+        "generate_seconds": ns("eval_duration"),
         "prompt_tokens": response.get("prompt_eval_count"),
         "output_tokens": response.get("eval_count"),
         "retried_on_cpu": retried_on_cpu,

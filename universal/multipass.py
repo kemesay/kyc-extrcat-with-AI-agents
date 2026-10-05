@@ -323,8 +323,24 @@ def partition(fields: tuple[str, ...], n: int) -> list[tuple[str, ...]]:
     return buckets
 
 
+def fewest_drops(n: int, fits, guess: int) -> int:
+    """Smallest k in 1..n with fits(k), for fits monotone in k (dropping more
+    blocks never makes the prompt longer); n when none fits. Starts at the
+    estimate-based guess, so it usually costs two exact counts, not k."""
+    k = min(max(guess, 1), n)
+    if fits(k):
+        while k > 1 and fits(k - 1):
+            k -= 1
+        return k
+    while k < n:
+        k += 1
+        if fits(k):
+            return k
+    return n
+
+
 def _plan_pass(model: str, ctx: int, image_tok: int, fields: tuple[str, ...], sys_blocks, user_blocks,
-               values: dict[str, Any], context: str, hints: Hints) -> PassPlan:
+               values: dict[str, Any], context: str, hints: Hints, exact_check: bool = True) -> PassPlan:
     fset = frozenset(fields)
     reserve = len(fields) * TOKENS_PER_FIELD + OUTPUT_OVERHEAD
     text_budget = ctx - image_tok - reserve - SAFETY_MARGIN
@@ -376,21 +392,47 @@ def _plan_pass(model: str, ctx: int, image_tok: int, fields: tuple[str, ...], sy
 
     system, user = build()
     exact = False
-    if used > EXACT_CHECK_ABOVE * text_budget:
+    if exact_check and used > EXACT_CHECK_ABOVE * text_budget:
+        kept = list(chosen)
         try:
             actual = T.exact_chat_tokens(model, system, user, ctx)
             exact = True
+            # Over budget: the least relevant optional blocks go, in score order,
+            # until the prompt fits. How many is found with a guided search
+            # instead of one exact re-count per dropped block (each re-count is
+            # a full prompt evaluation — five in a row, ~25 s, on llava:13b).
+            # Dropping text only shrinks the prompt, so the fewest drops that
+            # fit is the same number the one-at-a-time loop stops at.
             removable = sorted((b for b in chosen if not b.mandatory), key=lambda b: scores[id(b)])
-            while actual > text_budget and removable:
-                drop = removable.pop(0)
-                chosen.remove(drop)
+
+            def variant(k: int) -> tuple[str, str]:
+                gone = {id(b) for b in removable[:k]}
+                chosen[:] = [b for b in kept if id(b) not in gone]
+                return build()
+
+            counts = {0: actual}
+
+            def exact_at(k: int) -> int:
+                if k not in counts:
+                    counts[k] = T.exact_chat_tokens(model, *variant(k), ctx)
+                return counts[k]
+
+            k = 0
+            if actual > text_budget and removable:
+                ratio = actual / max(1, T.estimate(model, system + user))
+                guess = next((i for i in range(1, len(removable) + 1)
+                              if ratio * T.estimate(model, "".join(variant(i))) <= text_budget), len(removable))
+                k = fewest_drops(len(removable), lambda i: exact_at(i) <= text_budget, guess)
+            chosen[:] = [b for b in kept if b not in removable[:k]]
+            for drop in removable[:k]:
                 omitted.append(drop)
                 if scores[id(drop)] > 0:
                     relevant_in -= T.estimate(model, drop.text)
-                system, user = build()
-                actual = T.exact_chat_tokens(model, system, user, ctx)
-            used = actual
+            system, user = build()
+            used = exact_at(k)
         except Exception as e:
+            chosen[:] = kept
+            system, user = build()
             logger.warning("exact token check failed for %s: %s", model, e)
 
     num_predict = max(64, min(reserve, ctx - image_tok - used - 16))
@@ -418,20 +460,32 @@ def plan_agent(
     image_tok = sum(T.image_tokens_for(model, *_image_size(img)) for img in images or [])
     sys_blocks = split_blocks(system_template, "system")
     user_blocks = split_blocks(user_template, "user")
-    def plans_for(n: int) -> list[PassPlan]:
-        return [_plan_pass(model, ctx, image_tok, bucket, sys_blocks, user_blocks, values, context, hints)
+    def plans_for(n: int, exact: bool = True) -> list[PassPlan]:
+        return [_plan_pass(model, ctx, image_tok, bucket, sys_blocks, user_blocks, values, context, hints, exact)
                 for bucket in partition(fields, n)]
 
     if passes != "auto":
         return plans_for(max(1, min(int(passes), max_passes)))
-    single = plans_for(1)
-    if single[0].coverage >= 0.999:
-        return single
+    # An exact token check only ever REMOVES blocks, so a plan's coverage can
+    # only fall from its estimate. A candidate whose estimate already fails
+    # the auto rule would fail it exactly as well, so it is rejected without
+    # the exact-count probes (each a full prompt evaluation on the model). The
+    # plan chosen is the same as checking every candidate exactly; only probes
+    # that could not change it are skipped. With the current prompts every
+    # agent's single plan already reaches full coverage, so this matters for
+    # tighter contexts and longer custom prompts, not for today's timings.
+    single: Optional[list[PassPlan]] = None
+    if plans_for(1, exact=False)[0].coverage >= 0.999:
+        single = plans_for(1)
+        if single[0].coverage >= 0.999:
+            return single
     for n in range(2, max_passes + 1):
+        if min(p.coverage for p in plans_for(n, exact=False)) < AUTO_MIN_COVERAGE:
+            continue
         plans = plans_for(n)
         if min(p.coverage for p in plans) >= AUTO_MIN_COVERAGE:
             return plans
-    return single            # splitting wouldn't make passes well-informed: one packed call
+    return single or plans_for(1)   # splitting wouldn't make passes well-informed: one packed call
 
 
 # ─────────────────────────────────────────────────────────────
@@ -444,11 +498,37 @@ def run_agent(
     passes: Union[str, int] = "auto",
 ) -> tuple[dict[str, str], dict[str, Any]]:
     """-> (merged fields, log entry). A failed pass leaves its fields empty;
-    raises only if every pass fails."""
+    raises only if every pass fails. If Ollama reports a prompt larger than its
+    context, the model's token estimates are corrected from Ollama's own count
+    and the agent is re-planned and run once more — a wrong estimate costs one
+    retry, never the agent."""
+    try:
+        return _run_agent_once(model, system_template, user_template, fields, values, context, hints, images,
+                               passes)
+    except ContextOverflow as overflow:
+        T.learn_overflow(model, overflow.planned, overflow.actual)
+        data, log = _run_agent_once(model, system_template, user_template, fields, values, context, hints,
+                                    images, passes)
+        log["replanned_after_overflow"] = {"planned": overflow.planned, "ollama_counted": overflow.actual}
+        return data, log
+
+
+class ContextOverflow(RuntimeError):
+    def __init__(self, message: str, planned: int, actual: int):
+        super().__init__(message)
+        self.planned, self.actual = planned, actual
+
+
+def _run_agent_once(
+    model: str, system_template: str, user_template: str, fields: tuple[str, ...],
+    values: dict[str, Any], context: str, hints: Hints, images: Optional[list[str]],
+    passes: Union[str, int] = "auto",
+) -> tuple[dict[str, str], dict[str, Any]]:
     plans = plan_agent(model, system_template, user_template, fields, values, context, hints, images, passes)
     ctx = T.context_limit(model)
     merged: dict[str, str] = {}
     pass_logs, errors = [], []
+    overflow: Optional[tuple[int, int]] = None
     for i, plan in enumerate(plans, start=1):
         started = time.time()
         entry: dict[str, Any] = {
@@ -461,15 +541,22 @@ def run_agent(
             data, meta = chat_json(model, plan.system, plan.user, images=images, fields=plan.fields,
                                    num_ctx=ctx, num_predict=plan.num_predict)
             entry.update(prompt_tokens=meta.get("prompt_tokens"), output_tokens=meta.get("output_tokens"),
-                         complete_json=meta.get("complete_json"))
+                         complete_json=meta.get("complete_json"), host=meta.get("host"),
+                         load_seconds=meta.get("load_seconds"), prompt_eval_seconds=meta.get("prompt_eval_seconds"),
+                         generate_seconds=meta.get("generate_seconds"))
             for f in plan.fields:
                 if data.get(f) and not merged.get(f):
                     merged[f] = data[f]
         except Exception as e:
             errors.append(str(e)[:200])
             entry["error"] = str(e)[:200]
+            actual = T.overflow_tokens(e)
+            if actual:
+                overflow = max(overflow or (0, 0), (plan.prompt_tokens_est, actual), key=lambda o: o[1] / max(o[0], 1))
         entry["duration_seconds"] = round(time.time() - started, 2)
         pass_logs.append(entry)
+    if overflow:
+        raise ContextOverflow("; ".join(errors), *overflow)
     if errors and len(errors) == len(plans):
         raise RuntimeError("; ".join(errors))
     log = {

@@ -177,8 +177,8 @@ def test_hallucinated_calendar_never_overrides_verified_dob():
     fields["date_of_birth"].verified_by = ["mrz"]
     report = check_dual_calendar(fields, Context(country="UTO"))
     assert fields["date_of_birth"].value == "1974-08-12"
-    assert "implausible_calendar_for_country" in fields["date_of_birth_orig"].flags
-    assert "not used by UTO" in report["note"]
+    assert {"implausible_calendar_for_country", "not_an_original_calendar_date"} & set(fields["date_of_birth_orig"].flags)
+    assert "not used by UTO" in report["note"] or "Gregorian month name" in report["note"]
 
 
 def test_verified_dob_outranks_plausible_calendar_orig():

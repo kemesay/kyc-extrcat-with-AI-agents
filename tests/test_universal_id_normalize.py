@@ -113,3 +113,29 @@ def test_country_resolution(raw, code):
 ])
 def test_identifier_label(raw, expected):
     assert strip_identifier_label(raw) == expected
+
+
+@pytest.mark.parametrize("raw", ["[CA]", "(CAN)", '"Canada"', "“CANADA”", " 'CAN' "])
+def test_wrapped_country_values_resolve(raw):
+    from universal.normalize import resolve_country, resolve_nationality
+    assert resolve_country(raw)[0] == "CAN" and resolve_nationality(raw)[0] == "CAN"
+
+
+@pytest.mark.parametrize("raw", ["CA[CANADA]", "CAN / Canada", "Canada (CAN)", "[CA] CANADA"])
+def test_country_annotations_resolve_when_every_part_agrees(raw):
+    from universal.normalize import resolve_country, resolve_nationality
+    assert resolve_country(raw)[0] == "CAN" and resolve_nationality(raw)[0] == "CAN"
+
+
+def test_disagreeing_parts_are_not_guessed():
+    from universal.normalize import resolve_country
+    assert resolve_country("CAN / ETH") == ("", "")
+
+
+@pytest.mark.parametrize("raw, want", [("[a]HELFE BEREKET", "HELFE BEREKET"),
+                                       ("[CHECKED] DOE Jane", "DOE Jane"),
+                                       ("DOE<<JANE", "DOE JANE"),
+                                       ("ABEBE (አበበ)", "ABEBE (አበበ)")])       # parentheses are kept
+def test_clean_name_drops_bracket_annotations(raw, want):
+    from universal.normalize import clean_name
+    assert clean_name(raw) == want

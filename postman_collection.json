@@ -34,6 +34,12 @@
       "value": "",
       "type": "string",
       "description": "Populated automatically after a universal async request"
+    },
+    {
+      "key": "universal_priority",
+      "value": "online",
+      "type": "string",
+      "description": "live | online | batch | bulk — used by the universal extract requests"
     }
   ],
   "item": [
@@ -296,269 +302,938 @@
     },
     {
       "name": "Universal Engine (any country / script / ID type)",
-      "description": "5-agent Ollama team driven by universal_id_extraction_prompts.py, with every value checked by deterministic code: MRZ check digits, barcodes, national-ID checksums, calendar arithmetic and OCR grounding. mode=full (~1.5-2 min) or mode=fast (~15 s). Raise Postman's request timeout for the sync calls.",
+      "description": "Universal engine — any country, script or ID type. Every request runs the FULL agent team (fast_scanner → field_extractor + transcriber → accuracy_verifier → layout_analyzer → supervisor) and the deterministic verification layer, through the durable PostgreSQL + pgvector queue. Choose a priority per request: live > online > batch > bulk. Sync calls take ~2 min on the MacBook: raise Postman's request timeout to at least 300000 ms.",
       "item": [
         {
-          "name": "Universal Info",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/universal/info",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "universal",
-                "info"
-              ],
-              "query": []
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Universal Extract (Sync, fast)",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
-                },
-                {
-                  "key": "file_back",
-                  "type": "file",
-                  "src": [],
-                  "disabled": true
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/universal/extract/sync?mode=fast&doc_type={{doc_type}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "universal",
-                "extract",
-                "sync"
-              ],
-              "query": [
-                {
-                  "key": "mode",
-                  "value": "fast"
-                },
-                {
-                  "key": "doc_type",
-                  "value": "{{doc_type}}"
-                }
-              ]
-            },
-            "description": "One qwen2.5vl read + full deterministic verification."
-          },
-          "response": []
-        },
-        {
-          "name": "Universal Extract (Sync, full 5-agent)",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
-                },
-                {
-                  "key": "file_back",
-                  "type": "file",
-                  "src": [],
-                  "disabled": true
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/universal/extract/sync?mode=full&doc_type={{doc_type}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "universal",
-                "extract",
-                "sync"
-              ],
-              "query": [
-                {
-                  "key": "mode",
-                  "value": "full"
-                },
-                {
-                  "key": "doc_type",
-                  "value": "{{doc_type}}"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Universal Extract (Async - poll)",
-          "event": [
+          "name": "1. Service",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const r = pm.response.json();",
-                  "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
+              "name": "Health (readiness)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/health",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "health"
+                  ]
                 },
+                "description": "status ok/degraded, problems, inference hosts and which team models are resident on the GPU, queue depth per priority, database backend (postgresql + pgvector), workers and warm-up report."
+              },
+              "response": [],
+              "event": [
                 {
-                  "key": "file_back",
-                  "type": "file",
-                  "src": [],
-                  "disabled": true
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "const h = pm.response.json();",
+                      "pm.test('status is ok', () => pm.expect(h.status).to.eql('ok'));",
+                      "console.log('database:', JSON.stringify(h.database), '| queue:', JSON.stringify(h.queue), '| problems:', h.problems);"
+                    ]
+                  }
                 }
               ]
             },
-            "url": {
-              "raw": "{{base_url}}/universal/extract?mode=full&doc_type={{doc_type}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "universal",
-                "extract"
-              ],
-              "query": [
-                {
-                  "key": "mode",
-                  "value": "full"
-                },
-                {
-                  "key": "doc_type",
-                  "value": "{{doc_type}}"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Universal Extract (Async - callback_url)",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const r = pm.response.json();",
-                  "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
+              "name": "Info (agents, models, policy)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/info",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "info"
+                  ]
                 },
+                "description": "The agent team and each model's status, deterministic checks, serving policy (modes allowed, priorities) and queue stats."
+              },
+              "response": [],
+              "event": [
                 {
-                  "key": "file_back",
-                  "type": "file",
-                  "src": [],
-                  "disabled": true
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                    ]
+                  }
                 }
               ]
             },
-            "url": {
-              "raw": "{{base_url}}/universal/extract?mode=full&callback_url={{callback_url}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "universal",
-                "extract"
-              ],
-              "query": [
-                {
-                  "key": "mode",
-                  "value": "full"
+            {
+              "name": "Metrics (Prometheus)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/metrics",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "metrics"
+                  ]
                 },
+                "description": "Prometheus text format: queue wait, stage and agent times, model load time per call, review rate, capture grades, identity signals, queue depth."
+              },
+              "response": [],
+              "event": [
                 {
-                  "key": "callback_url",
-                  "value": "{{callback_url}}"
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Warm up models",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/warmup",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "warmup"
+                  ]
+                },
+                "description": "Loads every team model now (also done automatically when workers start). Takes a few seconds per model."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                    ]
+                  }
                 }
               ]
             }
-          },
-          "response": []
+          ]
         },
         {
-          "name": "Universal Job Status",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/universal/status/{{universal_job_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "universal",
-                "status",
-                "{{universal_job_id}}"
-              ],
-              "query": []
+          "name": "2. Extract",
+          "item": [
+            {
+              "name": "Extract (Sync, live priority)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract/sync?priority=live&doc_type={{doc_type}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract",
+                    "sync"
+                  ],
+                  "query": [
+                    {
+                      "key": "priority",
+                      "value": "live",
+                      "description": "customer waiting at the counter / in the app"
+                    },
+                    {
+                      "key": "doc_type",
+                      "value": "{{doc_type}}",
+                      "description": "auto | passport | national_id | drivers_license | residence_permit | visa | refugee_travel_document | military_id | other — a hint only"
+                    },
+                    {
+                      "key": "reject_poor_capture",
+                      "value": "false",
+                      "description": "true: refuse a blurred/dark/glare/tiny capture with 422 so the customer retakes it",
+                      "disabled": true
+                    },
+                    {
+                      "key": "include_agent_outputs",
+                      "value": "false",
+                      "description": "true: include each agent's raw JSON (debugging)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "agent_passes",
+                      "value": "auto",
+                      "description": "auto | 1 | 2 | 3",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ocr_grounding",
+                      "value": "true",
+                      "description": "cross-check agent values against local OCR",
+                      "disabled": true
+                    },
+                    {
+                      "key": "local_mrz_search",
+                      "value": "true",
+                      "description": "re-read the MRZ with local OCR when needed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "fresh",
+                      "value": "false",
+                      "description": "bypass the exact-duplicate cache (only if the server enables it)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Blocks until the full agent team finishes (~2 min on the MacBook) and returns the result. Raise Postman's request timeout (Settings → General → Request timeout) to at least 300000 ms.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "pm.test('has extracted_data', () => pm.expect(pm.response.json()).to.have.property('extracted_data'));",
+                      "const b = pm.response.json();",
+                      "console.log('review:', b.human_review_required, b.review_reasons, '| capture:', b.capture_quality && b.capture_quality.grade, '| queue:', JSON.stringify(b.queue));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Extract (Sync, front + back)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract/sync?priority={{universal_priority}}&doc_type={{doc_type}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract",
+                    "sync"
+                  ],
+                  "query": [
+                    {
+                      "key": "priority",
+                      "value": "{{universal_priority}}",
+                      "description": "live (customer waiting) | online | batch | bulk"
+                    },
+                    {
+                      "key": "doc_type",
+                      "value": "{{doc_type}}",
+                      "description": "auto | passport | national_id | drivers_license | residence_permit | visa | refugee_travel_document | military_id | other — a hint only"
+                    },
+                    {
+                      "key": "reject_poor_capture",
+                      "value": "false",
+                      "description": "true: refuse a blurred/dark/glare/tiny capture with 422 so the customer retakes it",
+                      "disabled": true
+                    },
+                    {
+                      "key": "include_agent_outputs",
+                      "value": "false",
+                      "description": "true: include each agent's raw JSON (debugging)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "agent_passes",
+                      "value": "auto",
+                      "description": "auto | 1 | 2 | 3",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ocr_grounding",
+                      "value": "true",
+                      "description": "cross-check agent values against local OCR",
+                      "disabled": true
+                    },
+                    {
+                      "key": "local_mrz_search",
+                      "value": "true",
+                      "description": "re-read the MRZ with local OCR when needed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "fresh",
+                      "value": "false",
+                      "description": "bypass the exact-duplicate cache (only if the server enables it)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Two-sided document: attach both files. Order doesn't matter.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)"
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "pm.test('has extracted_data', () => pm.expect(pm.response.json()).to.have.property('extracted_data'));",
+                      "const b = pm.response.json();",
+                      "console.log('review:', b.human_review_required, b.review_reasons, '| capture:', b.capture_quality && b.capture_quality.grade, '| queue:', JSON.stringify(b.queue));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Extract (Async, poll)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract?priority={{universal_priority}}&doc_type={{doc_type}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract"
+                  ],
+                  "query": [
+                    {
+                      "key": "priority",
+                      "value": "{{universal_priority}}",
+                      "description": "live (customer waiting) | online | batch | bulk"
+                    },
+                    {
+                      "key": "doc_type",
+                      "value": "{{doc_type}}",
+                      "description": "auto | passport | national_id | drivers_license | residence_permit | visa | refugee_travel_document | military_id | other — a hint only"
+                    },
+                    {
+                      "key": "reject_poor_capture",
+                      "value": "false",
+                      "description": "true: refuse a blurred/dark/glare/tiny capture with 422 so the customer retakes it",
+                      "disabled": true
+                    },
+                    {
+                      "key": "include_agent_outputs",
+                      "value": "false",
+                      "description": "true: include each agent's raw JSON (debugging)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "agent_passes",
+                      "value": "auto",
+                      "description": "auto | 1 | 2 | 3",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ocr_grounding",
+                      "value": "true",
+                      "description": "cross-check agent values against local OCR",
+                      "disabled": true
+                    },
+                    {
+                      "key": "local_mrz_search",
+                      "value": "true",
+                      "description": "re-read the MRZ with local OCR when needed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "fresh",
+                      "value": "false",
+                      "description": "bypass the exact-duplicate cache (only if the server enables it)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Returns a job_id immediately (saved to {{universal_job_id}}) and the queue_position. Then run '3. Jobs → Job Status'.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "const r = pm.response.json();",
+                      "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }",
+                      "console.log('queued at position', pm.response.json().queue_position);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Extract (Async, wait=true)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract?priority={{universal_priority}}&doc_type={{doc_type}}&wait=true",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract"
+                  ],
+                  "query": [
+                    {
+                      "key": "priority",
+                      "value": "{{universal_priority}}",
+                      "description": "live (customer waiting) | online | batch | bulk"
+                    },
+                    {
+                      "key": "doc_type",
+                      "value": "{{doc_type}}",
+                      "description": "auto | passport | national_id | drivers_license | residence_permit | visa | refugee_travel_document | military_id | other — a hint only"
+                    },
+                    {
+                      "key": "wait",
+                      "value": "true",
+                      "description": "block until done (not with callback_url)"
+                    },
+                    {
+                      "key": "reject_poor_capture",
+                      "value": "false",
+                      "description": "true: refuse a blurred/dark/glare/tiny capture with 422 so the customer retakes it",
+                      "disabled": true
+                    },
+                    {
+                      "key": "include_agent_outputs",
+                      "value": "false",
+                      "description": "true: include each agent's raw JSON (debugging)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "agent_passes",
+                      "value": "auto",
+                      "description": "auto | 1 | 2 | 3",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ocr_grounding",
+                      "value": "true",
+                      "description": "cross-check agent values against local OCR",
+                      "disabled": true
+                    },
+                    {
+                      "key": "local_mrz_search",
+                      "value": "true",
+                      "description": "re-read the MRZ with local OCR when needed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "fresh",
+                      "value": "false",
+                      "description": "bypass the exact-duplicate cache (only if the server enables it)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Queued like any job, but the request waits and returns the finished result.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "const r = pm.response.json();",
+                      "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Extract (Async, callback_url webhook)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract?priority={{universal_priority}}&doc_type={{doc_type}}&callback_url={{callback_url}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract"
+                  ],
+                  "query": [
+                    {
+                      "key": "priority",
+                      "value": "{{universal_priority}}",
+                      "description": "live (customer waiting) | online | batch | bulk"
+                    },
+                    {
+                      "key": "doc_type",
+                      "value": "{{doc_type}}",
+                      "description": "auto | passport | national_id | drivers_license | residence_permit | visa | refugee_travel_document | military_id | other — a hint only"
+                    },
+                    {
+                      "key": "callback_url",
+                      "value": "{{callback_url}}",
+                      "description": "the finished result is POSTed here"
+                    },
+                    {
+                      "key": "reject_poor_capture",
+                      "value": "false",
+                      "description": "true: refuse a blurred/dark/glare/tiny capture with 422 so the customer retakes it",
+                      "disabled": true
+                    },
+                    {
+                      "key": "include_agent_outputs",
+                      "value": "false",
+                      "description": "true: include each agent's raw JSON (debugging)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "agent_passes",
+                      "value": "auto",
+                      "description": "auto | 1 | 2 | 3",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ocr_grounding",
+                      "value": "true",
+                      "description": "cross-check agent values against local OCR",
+                      "disabled": true
+                    },
+                    {
+                      "key": "local_mrz_search",
+                      "value": "true",
+                      "description": "re-read the MRZ with local OCR when needed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "fresh",
+                      "value": "false",
+                      "description": "bypass the exact-duplicate cache (only if the server enables it)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Production pattern: fire-and-forget; the server POSTs the result to {{callback_url}}.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "const r = pm.response.json();",
+                      "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Extract (bulk backfill priority)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract?priority=bulk&doc_type={{doc_type}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract"
+                  ],
+                  "query": [
+                    {
+                      "key": "priority",
+                      "value": "bulk",
+                      "description": "historical backfill — runs after live/online work, never starved"
+                    },
+                    {
+                      "key": "doc_type",
+                      "value": "{{doc_type}}",
+                      "description": "auto | passport | national_id | drivers_license | residence_permit | visa | refugee_travel_document | military_id | other — a hint only"
+                    },
+                    {
+                      "key": "reject_poor_capture",
+                      "value": "false",
+                      "description": "true: refuse a blurred/dark/glare/tiny capture with 422 so the customer retakes it",
+                      "disabled": true
+                    },
+                    {
+                      "key": "include_agent_outputs",
+                      "value": "false",
+                      "description": "true: include each agent's raw JSON (debugging)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "agent_passes",
+                      "value": "auto",
+                      "description": "auto | 1 | 2 | 3",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ocr_grounding",
+                      "value": "true",
+                      "description": "cross-check agent values against local OCR",
+                      "disabled": true
+                    },
+                    {
+                      "key": "local_mrz_search",
+                      "value": "true",
+                      "description": "re-read the MRZ with local OCR when needed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "fresh",
+                      "value": "false",
+                      "description": "bypass the exact-duplicate cache (only if the server enables it)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Lowest tier: yields to newer live/online/batch work but ages forward (runs within 6 h).",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "const r = pm.response.json();",
+                      "if (r.job_id) { pm.collectionVariables.set('universal_job_id', r.job_id); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Extract (reject poor capture)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract/sync?priority=live&reject_poor_capture=true&doc_type={{doc_type}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract",
+                    "sync"
+                  ],
+                  "query": [
+                    {
+                      "key": "priority",
+                      "value": "live"
+                    },
+                    {
+                      "key": "reject_poor_capture",
+                      "value": "true",
+                      "description": "422 + issues if the photo is poor"
+                    },
+                    {
+                      "key": "doc_type",
+                      "value": "{{doc_type}}",
+                      "description": "auto | passport | national_id | drivers_license | residence_permit | visa | refugee_travel_document | military_id | other — a hint only"
+                    }
+                  ]
+                },
+                "description": "A poor capture (blur, darkness, glare, tiny resolution) is refused in milliseconds with 422 and the list of issues, so the customer can retake the photo immediately.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('200 (readable) or 422 (retake)', () => pm.expect(pm.response.code).to.be.oneOf([200, 422]));",
+                      "if (pm.response.code === 422) { console.log('retake:', JSON.stringify(pm.response.json().detail.issues)); }"
+                    ]
+                  }
+                }
+              ]
             }
-          },
-          "response": []
+          ]
         },
         {
-          "name": "Universal Delete Job",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/universal/job/{{universal_job_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "universal",
-                "job",
-                "{{universal_job_id}}"
-              ],
-              "query": []
+          "name": "3. Jobs",
+          "item": [
+            {
+              "name": "Job Status",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/status/{{universal_job_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "status",
+                    "{{universal_job_id}}"
+                  ]
+                },
+                "description": "queued (with queue_position) → processing → completed (with result) / failed."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                      "const s = pm.response.json();",
+                      "console.log(s.status, '| priority:', s.priority, '| position:', s.queue_position);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Cancel / Delete Job",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/job/{{universal_job_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "job",
+                    "{{universal_job_id}}"
+                  ]
+                },
+                "description": "Queued → cancelled; finished → deleted. A job that is processing returns 409 until it finishes."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('200 or 409', () => pm.expect(pm.response.code).to.be.oneOf([200, 409]));"
+                    ]
+                  }
+                }
+              ]
             }
-          },
-          "response": []
+          ]
+        },
+        {
+          "name": "4. Quality policy checks",
+          "item": [
+            {
+              "name": "Fast mode is refused (expect 400)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/universal/extract/sync?mode=fast",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "universal",
+                    "extract",
+                    "sync"
+                  ],
+                  "query": [
+                    {
+                      "key": "mode",
+                      "value": "fast",
+                      "description": "single-model read — disabled by the quality policy"
+                    }
+                  ]
+                },
+                "description": "The server runs the full agent team only. Expect 400 unless it was started with UNIVERSAL_ALLOW_FAST_MODE=1.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": [],
+                      "description": "Front of the document (JPG/PNG/WEBP/BMP/TIFF, max 25 MB)"
+                    },
+                    {
+                      "key": "file_back",
+                      "type": "file",
+                      "src": [],
+                      "description": "Back side (optional)",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('fast mode refused with 400', () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     }

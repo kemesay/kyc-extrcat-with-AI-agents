@@ -109,20 +109,21 @@ AS_PRINTED_FIELDS = (
     "surname_as_labelled", "given_names_as_labelled",
     "surname_local_script", "given_names_local_script", "full_name_local_script", "sex_as_printed",
     "date_of_birth_as_printed", "issue_date_as_printed", "expiry_date_as_printed",
-    "document_number_as_printed", "other_numbers_with_labels",
+    "document_number_as_printed", "other_numbers_with_labels", "dates_with_labels",
 )
 
 TRANSCRIPTION_SYSTEM = "You transcribe identity documents exactly. Return only JSON."
 
 AS_PRINTED_INSTRUCTIONS = """Transcribe these fields from the identity document EXACTLY as printed (same characters, same order, no reformatting, no date conversion):
 - surname_as_labelled: the value at the SURNAME / family-name label. Labels include "1" (numbered driving-licence field 1 — follow the NUMBER, not the position; some cards print field 2 above field 1), "LN", "Surname", "Family name", "Last name", "Nom", "Naam", "Efternamn", "Cognome", "Apellidos", "Nachname", and "Name" on German cards. For "SURNAME, Given names" take the part before the first comma. With no label, an ALL-CAPS word in a mixed-case name ("DOE Jane Mary") is the surname.
-- given_names_as_labelled: the value at the GIVEN-NAMES label: "2" (numbered field 2), "FN", "Given names", "First name", "Forenames", "Prénoms", "Voornamen", "Förnamn", "Vornamen", "Nombre", and "Nome" (Italian NOME / NAME means GIVEN name).
+- given_names_as_labelled: the value at the GIVEN-NAMES label: "2" (numbered field 2), "FN", "Given names", "First name", "Forenames", "Prénoms", "Voornamen", "Förnamn", "Vornamen", "Nombre", and "Nome" (Italian NOME / NAME means GIVEN name). On Ethiopian cards the name label is "ስም" / "Maqaa" / "Name".
 - surname_local_script / given_names_local_script: the SAME surname and given names as printed in the document's own non-Latin script (Amharic/Ge'ez, Arabic, Chinese, Japanese, Korean, Cyrillic, Greek, Hebrew, Devanagari, Thai...), character for character, e.g. "ለማ" and "መሳይ ከበደ". Do not transliterate or translate. Empty if the document prints no non-Latin name.
 - full_name_local_script: the whole non-Latin-script name exactly as printed, for documents that print one full name instead of separate surname / given names (e.g. "ሀና ታደሰ በቀለ", "خالد عمر حسن", "王芳"). Empty if none is printed.
-- sex_as_printed: the value at the sex label ("15 SEX", "Sex", "Sexe", "Geslacht", "Kön", "Sesso"), e.g. "M", "F", "V/F", "M/M".
-- date_of_birth_as_printed / issue_date_as_printed / expiry_date_as_printed: exactly as printed, e.g. "01/02/1984", "29 OKT/OCT 1972", "06MAR1994", "12/05/1982 | 20/01/1990" (driving-licence fields 3 / 4a / 4b). If two calendars are printed, give both separated by " | ".
+- sex_as_printed: the value at the sex label ("15 SEX", "Sex", "Sexe", "Geslacht", "Kön", "Sesso", "ፆታ", "Saala"), e.g. "M", "F", "V/F", "M/M".
+- date_of_birth_as_printed / issue_date_as_printed / expiry_date_as_printed: exactly as printed, e.g. "01/02/1984", "29 OKT/OCT 1972", "06MAR1994", "12/05/1982 | 20/01/1990" (driving-licence fields 3 / 4a / 4b). If two calendars are printed, give both separated by " | ". Follow the LABEL: a date labelled "Date Issued" / "የተሰጠበት ቀን" / "Guyyaa Kenname" is the issue date, "Expiry Date" / "የሚያበቃበት ቀን" / "Guyyaa Itti Dhumu" the expiry date. Leave date_of_birth_as_printed EMPTY when no birth-date label is printed (work and student cards often print none) — never put an issue, expiry or employment date there.
 - document_number_as_printed: the document / licence / card number (field 4d on US and Canadian licences, field 5 on EU and UK licences). NOT the 6-digit CAN (card access number), NOT a personal identity number, NOT the DD / document discriminator.
-- other_numbers_with_labels: every other number printed, each as "LABEL: value", separated by " | "."""
+- other_numbers_with_labels: every other number printed, each as "LABEL: value", separated by " | ".
+- dates_with_labels: EVERY date printed on the document, each as "LABEL: date", with the label copied exactly as printed in its own language and script, separated by " | ". E.g. "Date Issued: 15/03/2024 | የተሰጠበት ቀን: 06/07/2016 | Expiry Date: 14/03/2027". Include dates of employment, registration or entry with their labels too."""
 
 # Measured on the real-ID batch: appended to the 5,000-token extraction prompt,
 # these fields merely echoed the model's positional first/last guess; asked in

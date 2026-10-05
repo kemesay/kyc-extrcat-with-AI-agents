@@ -1,0 +1,9 @@
+# Universal engine runtime data: job queue, results, identity-signals store and
+# its HMAC key. Holds personal data and a secret — never commit.
+var/
+
+# Uploaded documents (existing /extract pipeline)
+uploads/
+
+__pycache__/
+.DS_Store

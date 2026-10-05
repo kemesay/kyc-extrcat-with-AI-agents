@@ -25,10 +25,34 @@ def _iso(fields: dict[str, FieldResult], name: str) -> Optional[date]:
         return None
 
 
-def check_dual_calendar(fields: dict[str, FieldResult], ctx: Context) -> Optional[dict]:
+def check_dual_calendar(fields: dict[str, FieldResult], ctx: Context, printed_text: Optional[str] = None) -> Optional[dict]:
     orig = fields["date_of_birth_orig"].value
     if not orig:
         return None
+    if "calendar_not_printed" in fields["date_of_birth"].flags:
+        return {"original": orig, "note": "calendar not printed — left for review"}
+    if printed_text is not None and "calendar_pair" not in fields["date_of_birth_orig"].verified_by \
+            and fields["date_of_birth_orig"].source != "printed_text":
+        # An agent's "original-calendar date" counts only if that date is printed on the card.
+        key = tuple(int(n) for n in re.findall(r"\d+", orig))
+        printed_keys = {tuple(int(n) for n in re.findall(r"\d+", m.group()))
+                        for m in re.finditer(r"\d{1,2}\s?[./\-]\s?\d{1,2}\s?[./\-]\s?\d{2,4}", printed_text)}
+        if key and key not in printed_keys:
+            fields["date_of_birth_orig"].alternatives = [orig] + fields["date_of_birth_orig"].alternatives
+            fields["date_of_birth_orig"].value = ""
+            fields["date_of_birth_orig"].flags.append("not_printed")
+            ctx.warn(f"date_of_birth_orig: {orig!r} is not printed on the document — not used")
+            return {"original": orig, "note": "not printed on the document — ignored"}
+    if "calendar_pair" in fields["date_of_birth"].verified_by:
+        # Both calendars were read and agree by arithmetic: nothing left to check.
+        return {"original": orig, "agrees_with_date_of_birth": True, "note": "settled by the printed calendar pair"}
+    if re.search(r"(?<![A-Za-z])(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b", orig, re.I):
+        # '07/FEB 1995': a Gregorian month name — an agent's mix of the two halves,
+        # not an Ethiopian date. Converting it as one invents a birth date.
+        fields["date_of_birth_orig"].alternatives = [orig]
+        fields["date_of_birth_orig"].value = ""
+        fields["date_of_birth_orig"].flags.append("not_an_original_calendar_date")
+        return {"original": orig, "note": "contains a Gregorian month name — not an original-calendar date"}
     hint = normalize_calendar_name(ctx.calendar)
     if hint in ("", "gregorian"):
         hint = COUNTRY_CALENDARS.get(ctx.country, "")
@@ -58,6 +82,16 @@ def check_dual_calendar(fields: dict[str, FieldResult], ctx: Context) -> Optiona
         report["note"] = (f"{converted.calendar} calendar is not used by {ctx.country} documents — "
                           "original-calendar date ignored")
         fields["date_of_birth_orig"].flags.append("implausible_calendar_for_country")
+        return report
+    labelled_other = [f for f in ("issue_date", "expiry_date") if fields[f].value == converted.iso]
+    if any(flag.startswith("labelled_as_") for flag in dob.flags) or labelled_other:
+        # The 'original-calendar birth date' is another printed date (the issue date's
+        # "25/10/2016 E.C" on a card that prints no birth date): it is not a birth date.
+        fields["date_of_birth_orig"].alternatives = [orig]
+        fields["date_of_birth_orig"].value = ""
+        fields["date_of_birth_orig"].flags.append("is_another_printed_date")
+        report["note"] = (f"{orig!r} is the card's {(labelled_other or ['labelled'])[0].replace('_', ' ')}, "
+                          "not a birth date")
         return report
     if not dob.value:
         dob.value, dob.source, dob.confidence = converted.iso, "calendar_conversion", 0.7
@@ -99,8 +133,17 @@ def check_plausibility(fields: dict[str, FieldResult], ctx: Context, today: Opti
         fr.alternatives, fr.flags = [fr.value] + fr.alternatives, fr.flags + ["duplicates_date_of_birth"]
         fr.value, fr.confidence = "", 0.0
     dob, issue, expiry = _iso(fields, "date_of_birth"), _iso(fields, "issue_date"), _iso(fields, "expiry_date")
+    printed = lambda n: bool({"printed_text", "calendar_pair", "printed_label", "mrz", "barcode"}
+                             & set(fields[n].verified_by))
+    if issue and expiry and expiry <= issue and printed("issue_date") and not printed("expiry_date") \
+            and "not_found_in_ocr" in fields["expiry_date"].flags:
+        # The contradiction is the unprinted date's: the printed issue date stands.
+        fr = fields["expiry_date"]
+        ctx.warn(f"expiry_date {fr.value} is before the printed issue date and not on the document per OCR — dropped")
+        fr.alternatives, fr.flags = [fr.value] + fr.alternatives, fr.flags + ["dropped_impossible_unprinted"]
+        fr.value, fr.confidence, expiry = "", 0.0, None
     impossible_issue = issue and (issue > today or (expiry and expiry <= issue) or (dob and issue < dob))
-    if impossible_issue and "not_found_in_ocr" in fields["issue_date"].flags:
+    if impossible_issue and "not_found_in_ocr" in fields["issue_date"].flags and not printed("issue_date"):
         # Physically impossible AND not printed anywhere per OCR: an invented value, not a finding.
         fr = fields["issue_date"]
         ctx.warn(f"issue_date {fr.value} is impossible and not on the document per OCR — dropped")

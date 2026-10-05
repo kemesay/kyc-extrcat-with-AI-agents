@@ -54,7 +54,9 @@ SPECIALIST = {
     "full_name_latin": "field_extractor",
     "address": "layout_analyzer", "district": "layout_analyzer", "sub_district": "layout_analyzer",
     "region": "layout_analyzer", "issuing_authority": "layout_analyzer",
-    "document_type": "fast_scanner", "language_primary": "fast_scanner",
+    # document_type / language_primary: no specialist. The fast scanner (the
+    # smallest model) votes like every agent; the card's printed title and
+    # labels then decide (universal.understanding).
 }
 
 # SUPERVISOR_PROMPT Rule 3 ("if field_extractor has Amharic/Arabic/CJK value
@@ -205,8 +207,14 @@ def normalize_value(name: str, raw: str, ctx: Context) -> tuple[str, set[str]]:
         return code or value.upper(), flags
     if name == "document_type":
         return normalize_document_type(value), flags
+    if name in ("document_series", "personal_number") and re.fullmatch(r"\s*[\[(](.*)[\])]\s*", value):
+        value = value.strip().strip("[]()").strip()               # '[AA0003239441]' -> 'AA0003239441'
+        flags.add("brackets_removed")
     if name == "blood_type":
-        return normalize_blood_type(value), flags
+        blood = normalize_blood_type(value)
+        if blood and not re.match(r"(AB|A|B|O)", blood, re.I):
+            return "", flags | {"not_a_blood_group"}              # '+' alone is not a blood group
+        return blood, flags
     if name.startswith("mrz_line"):
         line = clean_mrz_line(value)
         if len(line) < 28 or ("<" not in line and len(line) not in (30, 36, 44)):
@@ -765,6 +773,25 @@ def settle_name_parts(fields: dict[str, FieldResult], ctx: Context) -> str:
         ctx.warn(f"{last.value!r} is the own name in {ctx.country} naming order, not a surname — re-ordered")
         fields["first_name"], fields["middle_name"], fields["last_name"] = FieldResult(), FieldResult(), FieldResult()
         first, middle, last = fields["first_name"], fields["middle_name"], fields["last_name"]
+    if (ctx.country in PATRONYMIC_COUNTRIES and len(full_words) >= 3 and first.value and last.value
+            and first.value.upper() == full_words[0].upper()
+            and last.value.upper().split()[-1] == full_words[-1].upper()
+            and not {"mrz"} & set(first.verified_by + last.verified_by)
+            and (middle.value.upper(), last.value.upper()) != (" ".join(full_words[1:-1]).upper(),
+                                                               full_words[-1].upper())):
+        # Printed full name, patronymic order: own name, father's name, grandfather's
+        # name. The agents agree on the first and last word; the words between are
+        # the father's name (they dropped it, or glued it onto the last name).
+        inner = " ".join(full_words[1:-1])
+        ctx.warn(f"name parts from the printed full name in {ctx.country} naming order: middle {inner!r}, "
+                 f"last {full_words[-1]!r} (agents had middle {middle.value!r}, last {last.value!r})")
+        fields["middle_name"] = FieldResult(value=inner, confidence=0.8, source="full_name",
+                                            flags=["patronymic_order_from_full_name"],
+                                            alternatives=[v for v in [middle.value] if v])
+        fields["last_name"] = FieldResult(value=full_words[-1], confidence=max(last.confidence, 0.8),
+                                          source=last.source, verified_by=list(last.verified_by),
+                                          alternatives=[last.value] if last.value.upper() != full_words[-1].upper() else [])
+        middle, last = fields["middle_name"], fields["last_name"]
     if not last.value and not first.value:
         full = fields["full_name_latin"].value or fields["full_name"].value
         parts = parts_from_full_name(full, culture)
